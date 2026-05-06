@@ -1,0 +1,45 @@
+import {
+    SpinBox,
+    Button,
+    CheckBox,
+    Slider,
+    LineEdit,
+    ScrollView,
+    ListView,
+    HorizontalBox,
+    VerticalBox,
+    GridBox,
+    StandardButton,
+    Palette,
+} from "std-widgets.slint";
+import { BrowserItem } from "./browser_item.slint";
+
+import { BrowserConfig } from "./types.slint";
+
+export component MainWindow inherits Window {
+    in property <[BrowserConfig]> browser-model: [];
+
+    callback todo-added(string);
+    callback remove-done();
+    callback update_todo(BrowserConfig);
+
+    preferred-width: 400px;
+    preferred-height: 600px;
+
+    VerticalBox {
+        x: root.safe-area-insets.left;
+        y: root.safe-area-insets.top;
+        width: root.width - root.safe-area-insets.right - root.safe-area-insets.left;
+        height: root.height - root.safe-area-insets.bottom - root.safe-area-insets.top;
+
+        list-view := ScrollView {
+            VerticalLayout {
+                spacing: 10px;
+                padding: 5px;
+                for browser in root.browser-model: BrowserItem {
+                    browser: browser;
+                }
+            }
+        }
+    }
+}

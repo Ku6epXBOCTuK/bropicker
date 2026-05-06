@@ -1,0 +1,38 @@
+import {
+    Button,
+    HorizontalBox,
+} from "std-widgets.slint";
+
+import { BrowserConfig } from "./types.slint";
+
+export component BrowserItem {
+    height: 80px;
+    in property <BrowserConfig> browser;
+
+    Rectangle {
+        height: 100%;
+        width: 100%;
+        background: rgba(30, 41,  59, 0.3);
+        HorizontalBox {
+            height: 80px;
+            padding: 8px;
+            alignment: space-between;
+            Text {
+                text: browser.path;
+                vertical_alignment: center;
+            }
+
+            Text {
+                text: browser.flags;
+                vertical_alignment: center;
+            }
+
+            VerticalLayout {
+                alignment: center;
+                Button {
+                    text: "use";
+                }
+            }
+        }
+    }
+}
