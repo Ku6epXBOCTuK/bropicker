@@ -1,0 +1,41 @@
+import {
+    Button,
+    HorizontalBox,
+    VerticalBox,
+} from "std-widgets.slint";
+
+export component Footer inherits Rectangle {
+    callback settings-clicked();
+    callback feedback-clicked();
+    callback open-clicked();
+
+    HorizontalBox {
+        spacing: 16px;
+        padding-top: 16px;
+
+        HorizontalBox {
+            spacing: 16px;
+
+            Button {
+                text: "⚙️ Настроить";
+                clicked => {
+                    root.settings-clicked();
+                }
+            }
+
+            Button {
+                text: "💬 Обратная связь";
+                clicked => {
+                    root.feedback-clicked();
+                }
+            }
+        }
+
+        Button {
+            text: "Открыть";
+            clicked => {
+                root.open-clicked();
+            }
+        }
+    }
+}

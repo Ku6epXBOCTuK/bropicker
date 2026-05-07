@@ -1,43 +1,91 @@
-import {
-    SpinBox,
-    Button,
-    CheckBox,
-    Slider,
-    LineEdit,
-    ScrollView,
-    ListView,
-    HorizontalBox,
-    VerticalBox,
-    GridBox,
-    StandardButton,
-    Palette,
-} from "std-widgets.slint";
+import { Button, CheckBox, ListView } from "std-widgets.slint";
 import { BrowserItem } from "./browser_item.slint";
-
+import { Header } from "./header.slint";
+import { Footer } from "./footer.slint";
 import { BrowserConfig } from "./types.slint";
 
 export component MainWindow inherits Window {
     in property <[BrowserConfig]> browser-model: [];
+    in property <string> current-url: "";
+    in-out property <bool> remember-choice: false;
+    in-out property <bool> always-ask: true;
+    in property <int> selected-index: 0;
 
-    callback todo-added(string);
-    callback remove-done();
-    callback update_todo(BrowserConfig);
+    callback browser-selected(BrowserConfig);
+    callback toggle-remember(bool);
+    callback toggle-always-ask(bool);
+    callback settings-clicked();
+    callback feedback-clicked();
+    callback open-clicked();
+    callback request-drag();
 
-    preferred-width: 400px;
-    preferred-height: 600px;
+    // no-frame: true;
+    background: transparent;
+    width: 488px;
+    height: 800px;
+    default-font-family: "Segoe UI";
 
-    VerticalBox {
-        x: root.safe-area-insets.left;
-        y: root.safe-area-insets.top;
-        width: root.width - root.safe-area-insets.right - root.safe-area-insets.left;
-        height: root.height - root.safe-area-insets.bottom - root.safe-area-insets.top;
+    VerticalLayout {
+        alignment: start;
+        width: 488px;
+        height: 800px;
 
-        list-view := ScrollView {
+        padding: 20px;
+
+        Rectangle {
+            max-width: 448px;
+            width: 100%;
+            height: 760px;
+            border-radius: 16px;
+            clip: true;
+            background: #0f172a;
+            border-width: 1px;
+            border-color: #334155;
+
             VerticalLayout {
-                spacing: 10px;
-                padding: 5px;
-                for browser in root.browser-model: BrowserItem {
-                    browser: browser;
+                padding: 12px;
+
+                Header {
+                    url: current-url;
+                }
+
+                // ListView {
+                //     max-height: 400px;
+
+                //     for browser[i] in root.browser-model: BrowserItem {
+                //         browser: browser;
+                //         selected: i == root.selected-index;
+                //     }
+                // }
+
+                //     spacing: 12px;
+                //     padding-left: 4px;
+
+                //     CheckBox {
+                //         text: "Запомнить выбор для " + root.current-url;
+                //         checked <=> root.remember-choice;
+                //         toggled => {
+                //             root.toggle-remember(root.remember-choice);
+                //         }
+                //     }
+
+                //     CheckBox {
+                //         text: "Всегда спрашивать";
+                //         checked <=> root.always-ask;
+                //         toggled => {
+                //             root.toggle-always-ask(root.always-ask);
+                //         }
+                //     }
+                // }
+
+                Rectangle {
+                    vertical-stretch: 1;
+                }
+
+                Footer {
+                    settings-clicked => settings-clicked();
+                    feedback-clicked => feedback-clicked();
+                    open-clicked => open-clicked();
                 }
             }
         }
