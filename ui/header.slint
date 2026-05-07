@@ -1,40 +1,38 @@
 import { BrowserConfig } from "./types.slint";
-
+import { Theme } from "theme.slint";
 
 export component Header inherits Rectangle {
     in property <string> url;
-    property <brush> icon-gradient: @linear-gradient(135deg, rgb(59, 130, 246), rgb(6, 182, 212));
 
     VerticalLayout {
-        // width: 100%;
-        width: 448px;
-        padding: 12px;
-        padding-top: 20px;
-        spacing: 12px;
+        width: 100%;
+        padding: Theme.spacing-md;
+        padding-top: Theme.spacing-xl;
+        spacing: Theme.spacing-md;
 
         HorizontalLayout {
-            spacing: 12px;
+            spacing: Theme.spacing-md;
 
             Rectangle {
                 width: 48px;
                 height: 48px;
-                border-radius: 12px;
-                background: icon-gradient;
+                border-radius: Theme.radius;
+                background: Theme.gradient-main;
 
                 Image {
-                    source: @image-url("../logos/globe.svg");
+                    source: @image-url("../icons/globe.svg");
                     colorize: white;
                 }
             }
 
             VerticalLayout {
                 alignment: center;
-                spacing: 4px;
+                spacing: Theme.spacing-xs;
 
                 Text {
                     font-family: "Segpoe UI";
                     text: "Выберите браузер";
-                    color: #ffffff;
+                    color: Theme.text-main;
                     font-size: 18px;
                     font-weight: 600;
                 }
@@ -42,7 +40,7 @@ export component Header inherits Rectangle {
                 Text {
                     font-family: "Segpoe UI";
                     text: "Для открытия ссылки";
-                    color: #94a3b8;
+                    color: Theme.text-muted;
                     font-size: 14px;
                 }
             }
@@ -50,22 +48,22 @@ export component Header inherits Rectangle {
 
         Rectangle {
             height: 44px;
-            border-radius: 12px;
-            background: #1e293b;
+            border-radius: Theme.radius;
+            background: Theme.surface-elevated;
             border-width: 1px;
-            border-color: #334155;
+            border-color: Theme.border-main;
 
             HorizontalLayout {
-                padding: 12px;
-                padding-left: 16px;
-                padding-right: 16px;
-                spacing: 8px;
+                padding: Theme.spacing-md;
+                padding-left: Theme.spacing-lg;
+                padding-right: Theme.spacing-lg;
+                spacing: Theme.spacing-sm;
                 alignment: start;
 
                 Image {
-                    source: @image-url("../logos/external_link.svg");
+                    source: @image-url("../icons/external_link.svg");
                     width: 16px;
-                    colorize: #64748b;
+                    colorize: Theme.text-control-muted;
                     height: 16px;
                 }
 
@@ -74,7 +72,7 @@ export component Header inherits Rectangle {
 
                     Text {
                         text: "ku6epxboctuk.github.io";
-                        color: #cbd5e1;
+                        color: Theme.text-control;
                         font-size: 14px;
                         font-family: "Consolas";
                     }
@@ -87,6 +85,6 @@ export component Header inherits Rectangle {
         height: 1px;
         width: 100%;
         y: parent.height - self.height;
-        background: #334155;
+        background: Theme.border-main;
     }
 }

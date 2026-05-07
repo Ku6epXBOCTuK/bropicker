@@ -63,10 +63,6 @@ fn init() -> State {
         println!("Settings clicked");
     });
 
-    main_window.on_feedback_clicked(move || {
-        println!("Feedback clicked");
-    });
-
     main_window.on_open_clicked(move || {
         println!("Open clicked");
     });

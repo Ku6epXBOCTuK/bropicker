@@ -1,0 +1,35 @@
+import { Theme } from "theme.slint";
+
+export component GradientButton inherits Rectangle {
+    callback clicked <=> touch.clicked;
+    in property <string> text;
+
+    background: Theme.gradient-main;
+    border-radius: Theme.radius;
+    drop-shadow-offset-x: Theme.shadow-primary-x;
+    drop-shadow-offset-y: Theme.shadow-primary-y;
+    drop-shadow-blur: Theme.shadow-primary-blur;
+    drop-shadow-color: touch.has-hover ? Theme.shadow-color : transparent;
+    horizontal-stretch: 0;
+
+    animate drop-shadow-color { duration: 300ms; }
+
+    touch := TouchArea {
+        mouse-cursor: pointer;
+    }
+
+    HorizontalLayout {
+        padding: Theme.spacing-sm;
+        padding-left: Theme.spacing-xl;
+        padding-right: Theme.spacing-xl;
+
+        Text {
+            text: text;
+            font-family: "Segoe UI";
+            font-size: 14px;
+            font-weight: 600;
+            min-width: self.preferred-width;
+            min-height: self.preferred-height;
+        }
+    }
+}

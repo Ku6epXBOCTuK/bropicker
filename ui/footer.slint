@@ -1,37 +1,66 @@
-import {
-    Button,
-    HorizontalBox,
-    VerticalBox,
-} from "std-widgets.slint";
+import { IconButton } from "icon_button.slint";
+import { Theme } from "theme.slint";
+import { GradientButton } from "button.slint";
 
 export component Footer inherits Rectangle {
     callback settings-clicked();
-    callback feedback-clicked();
     callback open-clicked();
 
-    HorizontalBox {
-        spacing: 16px;
-        padding-top: 16px;
+    property <image> cog_icon: @image-url("../icons/cog.svg");
+    property <image> sun_icon: @image-url("../icons/sun.svg");
+    property <image> moon_icon: @image-url("../icons/moon.svg");
 
-        HorizontalBox {
+    width: 448px;
+
+    Rectangle {
+        height: 1px;
+        width: 100%;
+        y: 0px;
+        background: Theme.border-main;
+    }
+
+    HorizontalLayout {
+        alignment: space-between;
+        spacing: Theme.spacing-lg;
+        padding: Theme.spacing-md;
+        padding-left: Theme.spacing-lg;
+
+        HorizontalLayout {
             spacing: 16px;
 
-            Button {
-                text: "⚙️ Настроить";
-                clicked => {
-                    root.settings-clicked();
+            VerticalLayout {
+                alignment: center;
+                IconButton {
+                    icon: sun_icon;
+                    clicked => {
+                        Theme.toggle();
+                    }
                 }
             }
 
-            Button {
-                text: "💬 Обратная связь";
-                clicked => {
-                    root.feedback-clicked();
+            VerticalLayout {
+                alignment: center;
+                IconButton {
+                    icon: cog_icon;
+                    clicked => {
+                        root.settings-clicked();
+                    }
                 }
             }
         }
 
-        Button {
+        HorizontalLayout {
+            alignment: center;
+            VerticalLayout {
+                alignment: center;
+                Text {
+                    text: "Escape - закрыть";
+                    color: Theme.text-hint;
+                }
+            }
+        }
+
+        GradientButton {
             text: "Открыть";
             clicked => {
                 root.open-clicked();
