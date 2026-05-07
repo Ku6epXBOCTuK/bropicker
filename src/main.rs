@@ -5,18 +5,22 @@ slint::include_modules!();
 fn init() -> State {
     let browser_model = Rc::new(slint::VecModel::<BrowserConfig>::from(vec![
         BrowserConfig {
+            icon: "chrome".into(),
             path: "chrome.exe".into(),
             flags: "profile 1".into(),
         },
         BrowserConfig {
+            icon: "chrome".into(),
             path: "chrome.exe".into(),
             flags: "profile 2".into(),
         },
         BrowserConfig {
+            icon: "chrome".into(),
             path: "zen.exe".into(),
             flags: "".into(),
         },
         BrowserConfig {
+            icon: "chrome".into(),
             path: "edge.exe".into(),
             flags: "".into(),
         },
