@@ -1,8 +1,11 @@
+import { Theme } from "theme.slint";
 export component IconButton inherits Rectangle {
     callback clicked <=> touch.clicked;
 
     in property <image> icon;
-    property <color> icon_color:  touch.has-hover ? #ffffff : #94a3b8;
+    property <color> icon_color:  touch.has-hover ? Theme.text-main : Theme.text-muted;
+
+    animate icon_color { duration: 300ms; }
     height: 24px;
     width: 24px;
     background: transparent;

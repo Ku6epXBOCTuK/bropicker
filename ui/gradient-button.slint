@@ -3,6 +3,7 @@ import { Theme } from "theme.slint";
 export component GradientButton inherits Rectangle {
     callback clicked <=> touch.clicked;
     in property <string> text;
+    in property <image> icon;
 
     background: Theme.gradient-main;
     border-radius: Theme.radius;

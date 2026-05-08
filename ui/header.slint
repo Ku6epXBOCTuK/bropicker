@@ -1,5 +1,6 @@
 import { BrowserConfig } from "./types.slint";
-import { Theme } from "theme.slint";
+import { Theme } from "./theme.slint";
+import { GradientIcon } from "./gradient-icon.slint";
 
 export component Header inherits Rectangle {
     in property <string> url;
@@ -13,16 +14,22 @@ export component Header inherits Rectangle {
         HorizontalLayout {
             spacing: Theme.spacing-md;
 
-            Rectangle {
+            // Rectangle {
+            //     width: 48px;
+            //     height: 48px;
+            //     border-radius: Theme.radius;
+            //     background: Theme.gradient-main;
+
+            //     Image {
+            //         source: @image-url("../icons/globe.svg");
+            //         colorize: white;
+            //     }
+            // }
+
+            GradientIcon {
                 width: 48px;
                 height: 48px;
-                border-radius: Theme.radius;
-                background: Theme.gradient-main;
-
-                Image {
-                    source: @image-url("../icons/globe.svg");
-                    colorize: white;
-                }
+                icon: @image-url("../icons/globe.svg");
             }
 
             VerticalLayout {
