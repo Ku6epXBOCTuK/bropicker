@@ -1,96 +1,110 @@
-import {
-    HorizontalBox,
-    VerticalBox,
-} from "std-widgets.slint";
-import { BrowserConfig } from "./types.slint";
+import { Theme } from "./theme.slint";
 
-export component BrowserItem {
-    in property <BrowserConfig> browser;
+export component BrowserItem inherits Rectangle {
+    in property <image> browser-icon;
+    in property <string> browser-name;
+    in property <bool> is-default;
     in property <bool> selected;
+    callback clicked;
 
-    height: 88px;
-    width: 100%;
+    height: 84px;
+    background: transparent;
 
-    Rectangle {
-        width: 100%;
-        height: 100%;
-        border-radius: 16px;
-        background: selected ? #1e293b : #0f172a;
+    panel := Rectangle {
+        y: 4px;
+        height: 76px;
+        border-radius: 12px;
+        background: touch.has-hover ? Theme.surface-hover
+            : root.selected ? Theme.surface-elevated
+            : Theme.surface-item;
+        border-width: root.selected ? 2px : 1px;
+        border-color: root.selected ? #3b82f680 : transparent;
 
-        HorizontalBox {
-            padding: 16px;
+        touch := TouchArea {
+            mouse-cursor: pointer;
+            clicked => {
+                root.clicked();
+            }
+        }
+
+        HorizontalLayout {
+            padding: 14px;
             spacing: 16px;
 
             Rectangle {
                 width: 48px;
-                height: 48px;
+                vertical-stretch: 0;
                 border-radius: 12px;
-                background: #1e293b;
+                background: Theme.surface-elevated;
 
-                Text {
-                    width: 100%;
-                    height: 100%;
-                    horizontal-alignment: center;
-                    vertical-alignment: center;
-                    text: browser.icon;
-                    font-size: 24px;
+                Image {
+                    x: (parent.width - self.width) / 2;
+                    y: (parent.height - self.height) / 2;
+                    width: 30px;
+                    height: 30px;
+                    source: root.browser-icon;
                 }
             }
 
-            VerticalBox {
+            VerticalLayout {
                 alignment: center;
-                spacing: 4px;
 
-                Text {
-                    text: browser.name;
-                    color: #f8fafc;
-                    font-size: 16px;
-                    font-weight: 500;
-                }
-
-                if (browser.is-default): Rectangle {
-                    height: 22px;
-                    border-radius: 4px;
-                    background: #3b82f6;
+                HorizontalLayout {
+                    spacing: 8px;
+                    alignment: start;
 
                     Text {
-                        text: "По умолчанию";
-                        color: #60a5fa;
-                        font-size: 12px;
-                    }
-                }
-            }
-
-            VerticalBox {
-                alignment: center;
-                width: 24px;
-                height: 24px;
-
-                if (selected): Rectangle {
-                    width: 24px;
-                    height: 24px;
-                    border-radius: 12px;
-                    background: #3b82f6;
-
-                    Text {
-                        width: 100%;
-                        height: 100%;
-                        horizontal-alignment: center;
+                        text: root.browser-name;
+                        color: Theme.text-main;
+                        font-size: 16px;
+                        font-weight: 500;
                         vertical-alignment: center;
-                        text: "✓";
-                        color: #ffffff;
-                        font-size: 14px;
+                    }
+
+                    if root.is-default: Rectangle {
+                        height: 22px;
+                        border-radius: 11px;
+                        background: #3b82f620;
+
+                        HorizontalLayout {
+                            padding-left: 10px;
+                            padding-right: 10px;
+
+                            Text {
+                                text: "По умолчанию";
+                                color: #60a5fa;
+                                font-size: 12px;
+                                vertical-alignment: center;
+                            }
+                        }
                     }
                 }
+            }
 
-                if (!selected): Text {
+            Rectangle {
+                width: 24px;
+                border-radius: 12px;
+                background: root.selected ? #3b82f6 : Theme.surface-elevated;
+
+                Image {
+                    x: (parent.width - self.width) / 2;
+                    y: (parent.height - self.height) / 2;
+                    width: 12px;
+                    height: 12px;
+                    source: @image-url("../icons/check.svg");
+                    colorize: #ffffff;
+                    visible: root.selected;
+                }
+
+                Text {
                     width: 100%;
                     height: 100%;
                     horizontal-alignment: center;
                     vertical-alignment: center;
-                    text: ">";
-                    color: #64748b;
-                    font-size: 18px;
+                    text: "›";
+                    color: Theme.text-muted;
+                    font-size: 14px;
+                    visible: !root.selected;
                 }
             }
         }

@@ -7,6 +7,53 @@ import { Theme } from "theme.slint";
 
 export { Theme }
 
+component CheckRow inherits Rectangle {
+    in property <string> label;
+    in-out property <bool> checked;
+    callback toggled();
+
+    height: 28px;
+    background: transparent;
+
+    touch := TouchArea {
+        mouse-cursor: pointer;
+        clicked => {
+            root.checked = !root.checked;
+            root.toggled();
+        }
+    }
+
+    HorizontalLayout {
+        spacing: 12px;
+        padding-left: 4px;
+
+        Rectangle {
+            width: 20px;
+            border-radius: 6px;
+            background: root.checked ? #3b82f6 : transparent;
+            border-width: 2px;
+            border-color: root.checked ? #3b82f6 : Theme.border-main;
+
+            Image {
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                width: 12px;
+                height: 12px;
+                source: @image-url("../icons/check.svg");
+                colorize: #ffffff;
+                visible: root.checked;
+            }
+        }
+
+        Text {
+            text: root.label;
+            color: Theme.text-muted;
+            font-size: 14px;
+            vertical-alignment: center;
+        }
+    }
+}
+
 export component MainWindow inherits Window {
     title: "bropicker";
     in property <[BrowserConfig]> browser-model: [];
@@ -65,37 +112,44 @@ export component MainWindow inherits Window {
                     request-drag => root.request-drag();
                 }
 
-                // ListView {
-                //     max-height: 400px;
+                ListView {
+                    vertical-stretch: 1;
 
-                //     for browser[i] in root.browser-model: BrowserItem {
-                //         browser: browser;
-                //         selected: i == root.selected-index;
-                //     }
-                // }
-
-                //     spacing: 12px;
-                //     padding-left: 4px;
-
-                //     CheckBox {
-                //         text: "Запомнить выбор для " + root.current-url;
-                //         checked <=> root.remember-choice;
-                //         toggled => {
-                //             root.toggle-remember(root.remember-choice);
-                //         }
-                //     }
-
-                //     CheckBox {
-                //         text: "Всегда спрашивать";
-                //         checked <=> root.always-ask;
-                //         toggled => {
-                //             root.toggle-always-ask(root.always-ask);
-                //         }
-                //     }
-                // }
+                    for browser[i] in root.browser-model: BrowserItem {
+                        browser-icon: browser.icon;
+                        browser-name: browser.name;
+                        is-default: browser.is-default;
+                        selected: i == root.selected-index;
+                        clicked => {
+                            root.browser-selected(browser);
+                        }
+                    }
+                }
 
                 Rectangle {
-                    vertical-stretch: 1;
+                    height: 12px;
+                }
+
+                VerticalLayout {
+                    spacing: 8px;
+                    padding-left: 4px;
+                    padding-bottom: 8px;
+
+                    CheckRow {
+                        label: "Запомнить выбор для " + root.current-url;
+                        checked <=> root.remember-choice;
+                        toggled => {
+                            root.toggle-remember(root.remember-choice);
+                        }
+                    }
+
+                    CheckRow {
+                        label: "Всегда спрашивать";
+                        checked <=> root.always-ask;
+                        toggled => {
+                            root.toggle-always-ask(root.always-ask);
+                        }
+                    }
                 }
 
                 Footer {

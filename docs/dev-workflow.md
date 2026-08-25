@@ -38,8 +38,6 @@ HTML-макеты → PNG: **headless Edge** (`--headless --screenshot`), он �
       в `logos/` уже лежат отобранные PNG (chrome, firefox, opera, yandex, brave)
 - [x] `.gitignore`: `tools/out/`, `*.log`, `coldstart.txt`
 
-Коммит: `chore: repo hygiene`
-
 ## Этап B — утилиты в `tools/`
 
 Все скрипты — PowerShell, без сторонних зависимостей.
@@ -54,8 +52,6 @@ HTML-макеты → PNG: **headless Edge** (`--headless --screenshot`), он �
       `Start-Process target\debug\bropicker.exe` → пауза ~1.5 c → shot.ps1 →
       `Stop-Process`. Решает проблему «GUI-процесс блокирует терминал агента»
 - [ ] Опционально: `slint-lsp` / VS Code extension — ей для редактора, агент не зависит
-
-Коммит: `feat(tools): visual dev loop for ai agents`
 
 Проверка цикла: `render-refs` → `run-and-shot` → оба PNG существуют, агент их прочитал.
 
@@ -78,19 +74,22 @@ HTML-макеты → PNG: **headless Edge** (`--headless --screenshot`), он �
 
 Требует ручной проверки: перетаскивание мышью, Esc, центрирование на активном мониторе.
 
-Коммит: `feat(ui): frameless transparent window with drag`
-
 ## Этап D — список браузеров (MVP-ядро)
 
-- [ ] Раскомментировать/восстановить ListView + BrowserItem в main.slint (было закомментировано)
-- [ ] Логотипы: PNG из `logos/` вместо emoji (поле icon → путь к png)
-- [ ] Мок-данные 4 браузеров в VecModel (уже были в старом src/main.rs)
-- [ ] Выбор кликом + подсветка selected; hover-стили
-- [ ] Кнопка «Открыть» → callback → Rust: `std::process::Command(path).args(flags).arg(url)`
-- [ ] URL из argv: `std::env::args().nth(1)`
-- [ ] Закрытие окна после запуска
+- [x] ListView + BrowserItem восстановлены в main.slint (список растягивается, карточки 84px)
+- [x] Логотипы: PNG из `logos/`; `BrowserConfig.icon` теперь `image` — грузится в Rust
+      через `Image::load_from_path` (@image-url не умеет рантайм-пути; serde-derive
+      из types.slint убран — вернём в этапе E строкой в TOML)
+- [x] Мок-данные 4 браузеров; selected-index = первый is_default
+- [x] Выбор кликом + ring-подсветка + hover; галочка — SVG (`icons/check.svg`),
+      т.к. глифа U+2713 в шрифтах нет; добавлен токен `Theme.surface-item`
+- [x] Чекбоксы «Запомнить выбор…»/«Всегда спрашивать» — кастомный CheckRow по макету
+- [x] «Открыть» → `Command::new(path).args(flags).arg(url)`; при успехе окно скрывается
+      (loop завершается), при ошибке — сообщение в stderr
+- [x] URL из argv (`std::env::args().nth(1)`)
 
-Коммит: `feat: browser list mvp`
+Примечание: мок-пути (firefox.exe, chrome.exe, zen.exe) вне PATH — запуск вернёт
+ошибку в stderr до этапа E (автодетект/конфиг). Клик-выбор проверяется визуально.
 
 ## Этап E — конфиг и настройки
 
@@ -99,8 +98,6 @@ HTML-макеты → PNG: **headless Edge** (`--headless --screenshot`), он �
       вход по кнопке cog из футера (колбэк settings-clicked уже есть)
 - [ ] Автодетект установленных браузеров (реестр Windows) как fallback при отсутствии конфига
 - [ ] Чтение флагов из .lnk ярлыков (крейс `lnk`) — по желанию
-
-Коммит: `feat: config + settings page`
 
 ## Этап F — релиз
 
