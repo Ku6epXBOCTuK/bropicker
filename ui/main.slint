@@ -58,6 +58,7 @@ export component MainWindow inherits Window {
     title: "bropicker";
     in property <[BrowserConfig]> browser-model: [];
     in property <string> current-url: "";
+    in property <string> current-domain: "";
     in-out property <bool> remember-choice: false;
     in-out property <bool> always-ask: true;
     in property <int> selected-index: 0;
@@ -141,7 +142,7 @@ export component MainWindow inherits Window {
                     padding-bottom: 8px;
 
                     CheckRow {
-                        label: "Запомнить выбор для " + root.current-url;
+                        label: "Запомнить выбор для " + root.current-domain;
                         checked <=> root.remember-choice;
                         toggled => {
                             root.toggle-remember(root.remember-choice);

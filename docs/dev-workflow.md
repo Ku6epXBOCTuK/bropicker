@@ -101,13 +101,28 @@ HTML-макеты → PNG: **headless Edge** (`--headless --screenshot`), он �
 
 ## Этап E — конфиг и настройки
 
-- [ ] `config.toml` рядом с exe / `%APPDATA%\bropicker` (крейс `toml`), serde-структура BrowserConfig
-- [ ] Логика запуска с учётом галочек: remember-choice → записать выбор для домена;
-      always-ask → показывать пикер несмотря на запомненное
-- [ ] Страница настроек: TabWidget + LineEdit/SpinBox/ComboBox/CheckBox std-widgets;
-      вход по кнопке cog из футера (колбэк settings-clicked уже есть)
-- [ ] Автодетект установленных браузеров (реестр Windows) как fallback при отсутствии конфига
+### E1 — конфиг, автодетект, логика запуска — ГОТОВО
+
+- [x] `src/config.rs`: `%APPDATA%\bropicker\config.toml` (крейсы `toml` + `winreg`);
+      env `BP_CONFIG` для тестов; секции `[[browsers]]`, `[remembered]` (домен→имя),
+      `[settings]` (remember_choice, always_ask)
+- [x] Автодетект из реестра `HKLM/HKCU\SOFTWARE\Clients\StartMenuInternet`:
+      имя + exe из shell\open\command, дедуп по пути, проверка существования файла;
+      результат автосохраняется. Проверено: найдены Firefox, Zen, Chrome, Edge
+- [x] Иконки по имени (firefox/chrome/opera/brave/yandex → `logos/*.png`,
+      остальное → globe.svg). Нет логотипов: Edge, Zen
+- [x] Логика запуска: домен запомнен + always_ask=off → мгновенный запуск без окна
+      (протестировано); иначе пикер. Клик/«Открыть» + remember_choice → запись
+      домена в конфиг; переключение галочек персистится
+- [x] URL-бар привязан к свойству (был захардкожен), метка чекбокса — домен
+
+### E2 — страница настроек (следующий шаг)
+
+- [ ] Переключение вид/настройки по кнопке cog (settings-clicked)
+- [ ] Редактор списка браузеров: имя/путь/флаги (LineEdit), вкл/выкл
+- [ ] Список запомненных доменов с удалением
 - [ ] Чтение флагов из .lnk ярлыков (крейс `lnk`) — по желанию
+- [ ] Добавить логотипы Edge/Zen в logos/ (пересоздать набор из alrrr/browser-logos)
 
 ## Этап F — релиз
 
