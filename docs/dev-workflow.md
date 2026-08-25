@@ -32,11 +32,11 @@ HTML-макеты → PNG: **headless Edge** (`--headless --screenshot`), он �
 
 ## Этап A — порядок в репозитории
 
-- [ ] Удалена `example/` — копия примера Slint с копирайтом SixtyFPS и битыми path-deps
-- [ ] Zip `browser-logos` удалён (не был в git; перезаливаемо с github alrrr/browser-logos);
+- [x] Удалена `example/` — копия примера Slint с копирайтом SixtyFPS и битыми path-deps
+- [x] Zip `browser-logos` удалён (не был в git; перезаливаемо с github alrrr/browser-logos);
       LICENSE логотипов сохранён в `logos/LICENSE-browser-logos.txt`;
       в `logos/` уже лежат отобранные PNG (chrome, firefox, opera, yandex, brave)
-- [ ] `.gitignore`: `tools/out/`, `*.log`, `coldstart.txt`
+- [x] `.gitignore`: `tools/out/`, `*.log`, `coldstart.txt`
 
 Коммит: `chore: repo hygiene`
 

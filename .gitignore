@@ -1,2 +1,4 @@
 /target
-refs/browser-logos-75.0.1.zip
+tools/out/
+*.log
+coldstart.txt
