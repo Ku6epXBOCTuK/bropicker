@@ -65,7 +65,7 @@ fn init() -> State {
     main_window.set_remember_choice(true);
     main_window.set_always_ask(true);
 
-    main_window.on_browser_selected({
+    main_window.on_launch_browser({
         let main_window = main_window.clone_strong();
         let browser_model = browser_model.clone();
         move |browser: BrowserConfig| {
@@ -77,10 +77,24 @@ fn init() -> State {
                 })
                 .unwrap_or(0);
             main_window.set_selected_index(index as i32);
+
+            let url = main_window.get_current_url().to_string();
             println!(
-                "Selected [{}]: {:?} {:?}",
-                index, browser.path, browser.flags
+                "Launching [{}]: {:?} {:?} {}",
+                index, browser.path, browser.flags, url
             );
+
+            let mut cmd = std::process::Command::new(browser.path.to_string());
+            if !browser.flags.is_empty() {
+                cmd.args(browser.flags.split_whitespace());
+            }
+
+            match cmd.arg(url).spawn() {
+                Ok(_) => {
+                    let _ = main_window.window().hide();
+                }
+                Err(e) => eprintln!("launch failed: {e}"),
+            }
         }
     });
 

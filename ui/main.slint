@@ -62,7 +62,7 @@ export component MainWindow inherits Window {
     in-out property <bool> always-ask: true;
     in property <int> selected-index: 0;
 
-    callback browser-selected(BrowserConfig);
+    callback launch-browser(BrowserConfig);
     callback toggle-remember(bool);
     callback toggle-always-ask(bool);
     callback settings-clicked();
@@ -112,16 +112,21 @@ export component MainWindow inherits Window {
                     request-drag => root.request-drag();
                 }
 
-                ListView {
-                    vertical-stretch: 1;
+                HorizontalLayout {
+                    padding-left: 12px;
+                    padding-right: 12px;
 
-                    for browser[i] in root.browser-model: BrowserItem {
-                        browser-icon: browser.icon;
-                        browser-name: browser.name;
-                        is-default: browser.is-default;
-                        selected: i == root.selected-index;
-                        clicked => {
-                            root.browser-selected(browser);
+                    ListView {
+                        vertical-stretch: 1;
+
+                        for browser[i] in root.browser-model: BrowserItem {
+                            browser-icon: browser.icon;
+                            browser-name: browser.name;
+                            is-default: browser.is-default;
+                            selected: i == root.selected-index;
+                            clicked => {
+                                root.launch-browser(browser);
+                            }
                         }
                     }
                 }
