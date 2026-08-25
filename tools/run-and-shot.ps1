@@ -1,5 +1,6 @@
 param(
     [string]$Out = "tools/out/app.png",
+    [switch]$Light,
     [switch]$NoBuild
 )
 
@@ -16,7 +17,9 @@ if (-not (Test-Path $exe)) {
     exit 1
 }
 
+if ($Light) { $env:BP_THEME = "light" }
 $proc = Start-Process -FilePath $exe -WorkingDirectory $PWD -PassThru
+Remove-Item Env:\BP_THEME -ErrorAction SilentlyContinue
 Start-Sleep -Milliseconds 1800
 
 & "$PSScriptRoot\shot.ps1" -ProcId $proc.Id -Out $Out

@@ -64,14 +64,19 @@ HTML-макеты → PNG: **headless Edge** (`--headless --screenshot`), он �
 Текущее: окно с заголовком (специально, чтобы двигать мышью). Целевое: frameless +
 прозрачность + драг за хедер, как в макете.
 
-- [ ] `no-frame: true` + `background: transparent` в MainWindow
-- [ ] Прозрачность проверить первой же парой скриншотов (углы карточки vs ref-dark.png)
-- [ ] Драг: TouchArea в хедере → callback `request-drag` → в Rust через
-      `i-slint-backend-winit`: `window.with_winit_window(|w| w.drag_window())`
-      (код частично был в старом src/main.rs, восстановить из истории при необходимости)
-- [ ] Центрирование окна при старте — вернуть `src/winit.rs` (он в истории main до коммита 464f4f0)
-- [ ] Esc — закрыть: `FocusScope { key-event }` или `window.close()`
-- [ ] README привести в соответствие: стек Slint, скриншоты из `tools/out/`
+- [x] `no-frame: true` + `background: transparent` в MainWindow (+ `title: "bropicker"`)
+- [x] Прозрачность подтверждена скриншотами: карточка со скруглёнными углами парит
+      над рабочим столом, тёмная и светлая темы
+- [x] Драг: TouchArea на хедере (`pointer-event` down) → `request-drag` →
+      `with_winit_window(drag_window)` через `i-slint-backend-winit`
+- [x] Центрирование окна при старте — `src/winit.rs` восстановлен из истории
+      (осторожно: git-редирект PowerShell создаёт UTF-16 — файл перезаписан в UTF-8)
+- [x] Esc — закрыть: `FocusScope.key-pressed` (в 1.16 нет `key-event`; обработчик
+      обязан вернуть `accept`/`reject` во всех ветках)
+- [x] `BP_THEME=light` env-флаг + `run-and-shot.ps1 -Light`
+- [x] README обновлён (стек, статус, команды dev-цикла, дорожная карта)
+
+Требует ручной проверки: перетаскивание мышью, Esc, центрирование на активном мониторе.
 
 Коммит: `feat(ui): frameless transparent window with drag`
 

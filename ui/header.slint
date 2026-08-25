@@ -4,6 +4,18 @@ import { GradientIcon } from "./gradient-icon.slint";
 
 export component Header inherits Rectangle {
     in property <string> url;
+    callback request-drag();
+
+    TouchArea {
+        width: 100%;
+        height: 100%;
+        mouse-cursor: move;
+        pointer-event(event) => {
+            if (event.kind == PointerEventKind.down) {
+                root.request-drag();
+            }
+        }
+    }
 
     VerticalLayout {
         width: 100%;

@@ -16,6 +16,8 @@ public class BpWin {
     [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint pid);
     [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr hWnd);
     [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hWnd, out RECT rect);
+    [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
+    [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr hWnd, IntPtr after, int x, int y, int cx, int cy, uint flags);
     [StructLayout(LayoutKind.Sequential)]
     public struct RECT { public int Left; public int Top; public int Right; public int Bottom; }
 }
@@ -48,6 +50,11 @@ if ($found -eq [IntPtr]::Zero) {
 
 $rect = New-Object BpWin+RECT
 [BpWin]::GetWindowRect($found, [ref]$rect) | Out-Null
+
+[BpWin]::SetWindowPos($found, [IntPtr](-1), 0, 0, 0, 0, 0x0003) | Out-Null
+[BpWin]::SetForegroundWindow($found) | Out-Null
+Start-Sleep -Milliseconds 250
+
 $w = $rect.Right - $rect.Left
 $h = $rect.Bottom - $rect.Top
 
@@ -68,4 +75,4 @@ $outAbs = [System.IO.Path]::GetFullPath((Join-Path $PWD $Out))
 $bmp.Save($outAbs, [System.Drawing.Imaging.ImageFormat]::Png)
 $bmp.Dispose()
 
-Write-Host "OK $OutAbs (${w}x${h})"
+Write-Host "OK $OutAbs (${w}x${h} @ $($rect.Left),$($rect.Top))"

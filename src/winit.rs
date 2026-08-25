@@ -4,9 +4,7 @@ use i_slint_backend_winit::winit::monitor::MonitorHandle;
 use i_slint_backend_winit::winit::window::Window;
 
 pub fn center_window(window: &slint::Window) {
-    println!("Centering window");
     if window.has_winit_window() {
-        println!("Has winit");
         window.with_winit_window(|window: &Window| {
             match window.current_monitor() {
                 Some(monitor) => set_centered(window, &monitor),
@@ -23,9 +21,6 @@ fn set_centered(window: &Window, monitor: &MonitorHandle) {
 
     let monitor_size = monitor.size();
     let monitor_position = monitor.position();
-
-    println!("Monitor size: {:?}", monitor_size);
-    println!("Window size: {:?}", window_size);
 
     let mut monitor_window_position = PhysicalPosition { x: 0, y: 0 };
 

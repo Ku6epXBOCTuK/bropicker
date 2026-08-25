@@ -1,9 +1,9 @@
 use std::rc::Rc;
 
-// use slint::BackendSelector;
+use i_slint_backend_winit::WinitWindowAccessor;
 
-// use crate::winit::center_window;
-// mod winit;
+use crate::winit::center_window;
+mod winit;
 
 slint::include_modules!();
 
@@ -41,6 +41,10 @@ fn init() -> State {
 
     let main_window = MainWindow::new().unwrap();
 
+    if std::env::var("BP_THEME").as_deref() == Ok("light") {
+        main_window.global::<Theme>().set_is_dark(false);
+    }
+
     main_window.set_current_url("ku6epxboctuk.github.io".into());
     main_window.set_remember_choice(true);
     main_window.set_always_ask(true);
@@ -67,17 +71,21 @@ fn init() -> State {
         println!("Open clicked");
     });
 
-    // main_window.on_request_drag(move || {
-    //     main_window.window().with_winit_window(|winit_window| {
-    //         winit_window.drag_window().ok();
-    //     });
-    // });
+    main_window.on_request_drag({
+        let main_window = main_window.clone_strong();
+        move || {
+            main_window.window().with_winit_window(|winit_window| {
+                winit_window.drag_window().ok();
+            });
+        }
+    });
 
-    // center_window(main_window.window());
-
-    main_window
-        .window()
-        .on_close_requested(move || slint::CloseRequestResponse::HideWindow);
+    main_window.on_esc_pressed({
+        let main_window = main_window.clone_strong();
+        move || {
+            let _ = main_window.window().hide();
+        }
+    });
 
     main_window.set_browser_model(browser_model.clone().into());
     State {
@@ -100,5 +108,14 @@ pub fn main() {
 
     let state = init();
     let main_window = state.main_window.clone_strong();
+    main_window.show().unwrap();
+
+    let weak = main_window.as_weak();
+    let _ = slint::invoke_from_event_loop(move || {
+        if let Some(mw) = weak.upgrade() {
+            center_window(mw.window());
+        }
+    });
+
     main_window.run().unwrap();
 }

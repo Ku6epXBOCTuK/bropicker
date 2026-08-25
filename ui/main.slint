@@ -5,7 +5,10 @@ import { Footer } from "./footer.slint";
 import { BrowserConfig } from "./types.slint";
 import { Theme } from "theme.slint";
 
+export { Theme }
+
 export component MainWindow inherits Window {
+    title: "bropicker";
     in property <[BrowserConfig]> browser-model: [];
     in property <string> current-url: "";
     in-out property <bool> remember-choice: false;
@@ -18,12 +21,25 @@ export component MainWindow inherits Window {
     callback settings-clicked();
     callback open-clicked();
     callback request-drag();
+    callback esc-pressed();
 
-    // no-frame: true;
+    no-frame: true;
     background: transparent;
     width: 488px;
     height: 800px;
     default-font-family: "Segoe UI";
+
+    FocusScope {
+        init => { self.focus(); }
+        key-pressed(event) => {
+            if (event.text == Key.Escape) {
+                root.esc-pressed();
+                accept
+            } else {
+                reject
+            }
+        }
+    }
 
     VerticalLayout {
         alignment: start;
@@ -46,6 +62,7 @@ export component MainWindow inherits Window {
 
                 Header {
                     url: current-url;
+                    request-drag => root.request-drag();
                 }
 
                 // ListView {
