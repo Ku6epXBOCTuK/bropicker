@@ -169,10 +169,18 @@ HTML-макеты → PNG: **headless Edge** (`--headless --screenshot`), он �
       Цель <100 ms чуть не достигнута; варианты оптимизации, если захочется:
       renderer-femtovg вместо skia (быстрее init GPU), отложенная загрузка
       конфига. Пока считаем приемлемым
-- [ ] Иконка exe (.ico через build.rs winres)
-- [ ] Выбрать лицензию проекта: GPLv3 (опенсорс) или Royalty-free Slint (закрытый десктоп,
-      атрибуция AboutSlint) — зафиксировать в README и LICENSE
-- [ ] Скриншоты в README из tools/out
+- [x] Иконка exe: `assets/icon.svg` (градиент + глобус + точки «выбора»)
+      → `magick` → `assets/icon.png` + `assets/app.ico` (16-256) → `winresource`
+      в build.rs; проверено ExtractAssociatedIcon
+- [x] Лицензия MIT (`LICENSE`); Slint — по Royalty-free License 2.0 (маршрут (b):
+      бейдж Made-with-Slint в README, текст лицензии в `licenses/` и в
+      составе установки `%LOCALAPPDATA%\bropicker\licenses\`).
+      ВАЖНО: маршрут (b) требует публичной страницы с бейджем; если репо
+      станет приватным — добавить виджет AboutSlint в окно настроек
+- [x] Скриншоты в README: `docs/img/screenshot-{dark,light}.png`;
+      перегенерация — `just screenshots` (tools/screenshots.ps1 → shot.ps1 -Card:
+      DPI-aware обрезка до карточки, клип на 2px внутрь срезает AA-бахрому
+      скруглений, углы прозрачные — чужих пикселей нет)
 - [ ] Ручной сценарий приёмки: register → клик ссылки в другом приложении →
       пикер → выбор → вкладка открылась; повторный клик того же домена при
       always_ask=off → сразу браузер

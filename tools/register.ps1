@@ -29,6 +29,11 @@ Copy-Item $src (Join-Path $installDir "bropicker.exe") -Force
 Copy-Item (Join-Path $PSScriptRoot "..\logos") (Join-Path $installDir "logos") -Recurse -Force
 Copy-Item (Join-Path $PSScriptRoot "..\icons") (Join-Path $installDir "icons") -Recurse -Force
 
+$licensesDir = Join-Path $installDir "licenses"
+New-Item -ItemType Directory -Force -Path $licensesDir | Out-Null
+Copy-Item (Join-Path $PSScriptRoot "..\licenses\Slint-Royalty-free-2.0.md") $licensesDir -Force
+Copy-Item (Join-Path $PSScriptRoot "..\logos\LICENSE-browser-logos.txt") $licensesDir -Force
+
 $exe = Join-Path $installDir "bropicker.exe"
 Write-Host "Installed to: $exe"
 

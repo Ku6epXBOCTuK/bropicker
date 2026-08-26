@@ -15,6 +15,7 @@ winreg = "0.56.0"
 
 [build-dependencies]
 slint-build = "1.16.1"
+winresource = "0.1.31"
 
 [profile.release]
 lto = true

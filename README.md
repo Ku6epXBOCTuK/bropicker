@@ -1,37 +1,84 @@
-## 🚀 Rust Browser Picker (Working Title)
+<div align="center">
 
-Легкий и мгновенный переключатель браузеров на Rust + Slint. Замена тяжеловесным аналогам, которые долго загружаются.
+<img src="assets/icon.png" width="96" alt="bropicker">
 
-## 🎯 Цель
+# bropicker
 
-Создать утилиту, которая перехватывает открытие ссылок и предлагает выбрать браузер в красивом UI. Главный приоритет — скорость запуска (Cold Start < 100ms).
+Лёгкий переключатель браузеров: кликаешь ссылку — bropicker спрашивает, каким браузером её открыть.
 
-## 🛠 Технологический стек
+**Rust + Slint, нативный рендер без WebView, cold start ~110 ms.**
 
-- Язык: [Rust](https://www.rust-lang.org/)
-- GUI: [Slint](https://slint.dev/) (Native-speed, Declarative UI)
-- Запуск процессов: std::process::Command
+<a href="https://slint.dev"><img src="https://raw.githubusercontent.com/slint-ui/slint/master/logo/MadeWithSlint-logo-whitebg.png" alt="Made with Slint" height="28"></a>
 
-## 📊 Текущий статус
+<img src="docs/img/screenshot-dark.png" width="244" alt="Тёмная тема">&nbsp;<img src="docs/img/screenshot-light.png" width="244" alt="Светлая тема">
 
-- Frameless-окно с прозрачным фоном: карточка парит над рабочим столом со скруглёнными углами
-- Тёмная и светлая темы (переключение кнопкой, env `BP_THEME=light`)
-- Перетаскивание окна за хедер, Esc — закрыть, центрирование при старте
-- Дизайн-макеты: [refs/dark.html](refs/dark.html) / [refs/light.html](refs/light.html)
+</div>
 
-## 🔧 Разработка
+## Возможности
 
-План работ и цикл визуальной разработки с ИИ-агентом — [docs/dev-workflow.md](docs/dev-workflow.md).
+- Frameless-окно с прозрачностью, перетаскивание за хедер, Esc — закрыть
+- Тёмная и светлая темы
+- Автодетект установленных браузеров из реестра (Firefox, Chrome, Edge, Zen, Opera, Brave, Яндекс…)
+- Запоминание выбора по домену: повторные ссылки открываются сразу, без вопроса
+- Галочка «Всегда спрашивать» — пикер вызывается даже для запомненных доменов
+- Несколько профилей одного браузера как отдельные записи (флаги + эмодзи-иконка)
+- Конфиг в TOML, открывается кнопкой шестерёнки
+
+## Сборка
 
 ```powershell
-cargo run                                  # запуск
-tools/render-refs.ps1                      # PNG-референсы из макетов
-tools/run-and-shot.ps1                     # собрать, снять скриншот окна
-tools/run-and-shot.ps1 -Light              # то же в светлой теме
+cargo build --release
 ```
 
-## 🗺 Дорожная карта
+## Установка обработчиком ссылок
 
-1. Список браузеров с логотипами, запуск выбранного браузера с URL (MVP)
-2. Регистрация в системе как браузер по умолчанию
-3. config.toml + страница настроек
+```powershell
+tools\register.ps1        # скопирует сборку в %LOCALAPPDATA%\bropicker и откроет настройки Windows
+```
+
+В открывшемся окне выбери **bropicker** для HTTP и HTTPS. Откат: `tools\register.ps1 -Uninstall`.
+
+## Конфигурация
+
+`%APPDATA%\bropicker\config.toml` (шестерёнка в пикере открывает его в редакторе).
+Пример с профилями и эмодзи: [docs/config.example.toml](docs/config.example.toml).
+
+```toml
+[[browsers]]
+name = "Chrome — Work"
+path = 'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe'
+flags = '--profile-directory="Default"'
+emoji = "💼"
+
+[remembered]
+"github.com" = "Chrome — Work"
+
+[settings]
+remember_choice = true
+always_ask = true
+```
+
+## Разработка
+
+```powershell
+just check          # fmt + clippy -D warnings + тесты
+just screenshots    # перегенерация скриншотов README (тёмная + светлая)
+just icons          # перегенерация иконок из assets/icon.svg
+just release        # release-сборка
+just register       # установка/обновление обработчика ссылок
+```
+
+То же напрямую: `tools\check.ps1`, `tools\screenshots.ps1`, `tools\register.ps1`.
+Планы и процесс: [docs/dev-workflow.md](docs/dev-workflow.md).
+
+## Лицензия
+
+Код bropicker — [MIT](LICENSE).
+
+Интерфейс построен на [Slint](https://slint.dev), который используется по
+[Slint Royalty-free License 2.0](licenses/Slint-Royalty-free-2.0.md)
+Текст лицензии также входит
+в состав установки (`licenses/`).
+
+Логотипы браузеров — [alrrr/browser-logos](https://github.com/alrrr/browser-logos), MIT
+([LICENSE](logos/LICENSE-browser-logos.txt)).
