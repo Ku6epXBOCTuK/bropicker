@@ -1,4 +1,4 @@
-﻿use std::collections::HashMap;
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
@@ -17,8 +17,12 @@ pub fn log(msg: &str) {
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_secs())
         .unwrap_or(0);
-    if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(&path) {
-        let _ = writeln!(f, "[{ts}] {msg}");
+    if let Ok(mut f) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&path)
+    {
+        let _ = writeln!(f, "[{ts}] [bp] {msg}");
     }
 }
 
@@ -103,7 +107,7 @@ pub fn save(cfg: &Config) {
 pub fn ensure_browsers(cfg: &mut Config) {
     if cfg.browsers.is_empty() {
         cfg.browsers = detect_browsers();
-        log(&format!("[bp] autodetected {} browsers", cfg.browsers.len()));
+        log(&format!("autodetected {} browsers", cfg.browsers.len()));
         if !cfg.browsers.is_empty() {
             save(cfg);
         }
@@ -128,14 +132,13 @@ fn extract_exe(cmd: &str) -> Option<String> {
 }
 
 pub fn detect_browsers() -> Vec<BrowserEntry> {
-    use winreg::enums::{HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE};
     use winreg::RegKey;
+    use winreg::enums::{HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE};
 
     let mut out: Vec<BrowserEntry> = Vec::new();
 
     for hive in [HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER] {
-        let Ok(clients) =
-            RegKey::predef(hive).open_subkey("SOFTWARE\\Clients\\StartMenuInternet")
+        let Ok(clients) = RegKey::predef(hive).open_subkey("SOFTWARE\\Clients\\StartMenuInternet")
         else {
             continue;
         };
@@ -143,9 +146,7 @@ pub fn detect_browsers() -> Vec<BrowserEntry> {
             let Ok(client) = clients.open_subkey(&key_name) else {
                 continue;
             };
-            let friendly: String = client
-                .get_value("")
-                .unwrap_or_else(|_| key_name.clone());
+            let friendly: String = client.get_value("").unwrap_or_else(|_| key_name.clone());
             let command: String = client
                 .open_subkey("shell\\open\\command")
                 .and_then(|k| k.get_value(""))
@@ -199,4 +200,59 @@ const KNOWN_ICONS: &[(&str, &str)] = &[
 pub fn is_known_browser(name: &str) -> bool {
     let n = name.to_lowercase();
     KNOWN_ICONS.iter().any(|(kw, _)| n.contains(kw))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{domain_of, extract_exe, is_known_browser};
+
+    #[test]
+    fn domain_basic() {
+        assert_eq!(domain_of("https://example.com/path?q=1"), "example.com");
+        assert_eq!(domain_of("http://example.com"), "example.com");
+    }
+
+    #[test]
+    fn domain_strips_www_and_port() {
+        assert_eq!(domain_of("https://www.example.com:8443/a"), "example.com");
+    }
+
+    #[test]
+    fn domain_without_scheme() {
+        assert_eq!(domain_of("example.com/x"), "example.com");
+    }
+
+    #[test]
+    fn domain_lowercases() {
+        assert_eq!(domain_of("https://EXAMPLE.com"), "example.com");
+    }
+
+    #[test]
+    fn extract_exe_quoted_with_args() {
+        assert_eq!(
+            extract_exe(r#""C:\Program Files\app.exe" --flag"#),
+            Some(r"C:\Program Files\app.exe".to_string())
+        );
+    }
+
+    #[test]
+    fn extract_exe_unquoted() {
+        assert_eq!(
+            extract_exe(r"C:\tools\app.exe --other"),
+            Some(r"C:\tools\app.exe".to_string())
+        );
+    }
+
+    #[test]
+    fn extract_exe_empty() {
+        assert_eq!(extract_exe("   "), None);
+    }
+
+    #[test]
+    fn known_browsers_match_case_insensitive() {
+        assert!(is_known_browser("Mozilla Firefox"));
+        assert!(is_known_browser("google chrome"));
+        assert!(is_known_browser("Яндекс Браузер"));
+        assert!(!is_known_browser("Zen Browser"));
+    }
 }

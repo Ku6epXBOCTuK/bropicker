@@ -6,10 +6,9 @@ use i_slint_backend_winit::winit::window::Window;
 pub fn center_window(window: &slint::Window) {
     if window.has_winit_window() {
         window.with_winit_window(|window: &Window| {
-            match window.current_monitor() {
-                Some(monitor) => set_centered(window, &monitor),
-                None => (),
-            };
+            if let Some(monitor) = window.current_monitor() {
+                set_centered(window, &monitor);
+            }
 
             None as Option<()>
         });

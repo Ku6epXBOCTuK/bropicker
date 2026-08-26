@@ -137,7 +137,7 @@ export component SettingsWindow inherits Window {
                                 Rectangle {
                                     width: 30px;
                                     border-radius: 6px;
-                                    background: del-touch.has-hover ? #ef444420 : transparent;
+                                    background: del-touch.has-hover ? Theme.danger-soft : transparent;
 
                                     del-touch := TouchArea {
                                         mouse-cursor: pointer;
@@ -152,7 +152,7 @@ export component SettingsWindow inherits Window {
                                         width: 16px;
                                         height: 16px;
                                         source: @image-url("../icons/trash.svg");
-                                        colorize: del-touch.has-hover ? #ef4444 : Theme.text-muted;
+                                        colorize: del-touch.has-hover ? Theme.danger : Theme.text-muted;
                                     }
                                 }
                             }
@@ -209,7 +209,7 @@ export component SettingsWindow inherits Window {
                                 Rectangle {
                                     width: 30px;
                                     border-radius: 6px;
-                                    background: del2-touch.has-hover ? #ef444420 : transparent;
+                                    background: del2-touch.has-hover ? Theme.danger-soft : transparent;
 
                                     del2-touch := TouchArea {
                                         mouse-cursor: pointer;
@@ -224,7 +224,7 @@ export component SettingsWindow inherits Window {
                                         width: 16px;
                                         height: 16px;
                                         source: @image-url("../icons/trash.svg");
-                                        colorize: del2-touch.has-hover ? #ef4444 : Theme.text-muted;
+                                        colorize: del2-touch.has-hover ? Theme.danger : Theme.text-muted;
                                     }
                                 }
                             }

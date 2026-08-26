@@ -1,4 +1,4 @@
-import { Button, CheckBox, ListView } from "std-widgets.slint";
+import { ListView } from "std-widgets.slint";
 import { BrowserItem } from "./browser_item.slint";
 import { Header } from "./header.slint";
 import { Footer } from "./footer.slint";
@@ -32,9 +32,9 @@ component CheckRow inherits Rectangle {
         Rectangle {
             width: 20px;
             border-radius: 6px;
-            background: root.checked ? #3b82f6 : transparent;
+            background: root.checked ? Theme.accent : transparent;
             border-width: 2px;
-            border-color: root.checked ? #3b82f6 : Theme.border-main;
+            border-color: root.checked ? Theme.accent : Theme.border-main;
 
             Image {
                 x: (parent.width - self.width) / 2;
@@ -65,7 +65,7 @@ export component MainWindow inherits Window {
     in-out property <bool> always-ask: true;
     in property <int> selected-index: 0;
 
-    callback launch-browser(BrowserConfig);
+    callback launch-browser(int);
     callback toggle-remember(bool);
     callback toggle-always-ask(bool);
     callback settings-clicked();
@@ -128,14 +128,15 @@ export component MainWindow inherits Window {
                         vertical-stretch: 1;
 
                         for browser[i] in root.browser-model: BrowserItem {
+                            index: i;
                             browser-icon: browser.icon;
                             emoji: browser.emoji;
                             icon-mask: browser.icon-mask;
                             browser-name: browser.name;
                             is-default: browser.is-default;
                             selected: i == root.selected-index;
-                            clicked => {
-                                root.launch-browser(browser);
+                            clicked(idx) => {
+                                root.launch-browser(idx);
                             }
                         }
                     }

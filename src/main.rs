@@ -1,4 +1,7 @@
-#![cfg_attr(all(not(debug_assertions), target_os = "windows"), windows_subsystem = "windows")]
+#![cfg_attr(
+    all(not(debug_assertions), target_os = "windows"),
+    windows_subsystem = "windows"
+)]
 
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -7,43 +10,38 @@ use i_slint_backend_winit::WinitWindowAccessor;
 use slint::Model;
 
 mod config;
+mod launcher;
 mod winit;
 
 use config::{BrowserEntry, Config};
 
 slint::include_modules!();
 
-fn split_flags(flags: &str) -> Vec<String> {
-    let mut out = Vec::new();
-    let mut cur = String::new();
-    let mut in_quotes = false;
-    for c in flags.chars() {
-        match c {
-            '"' => in_quotes = !in_quotes,
-            ' ' if !in_quotes => {
-                if !cur.is_empty() {
-                    out.push(std::mem::take(&mut cur));
-                }
-            }
-            _ => cur.push(c),
+const DEFAULT_URL: &str = "ku6epxboctuk.github.io";
+const ENV_THEME: &str = "BP_THEME";
+const ENV_VIEW: &str = "BP_VIEW";
+const VIEW_SETTINGS: &str = "settings";
+
+impl From<&BrowserConfig> for BrowserEntry {
+    fn from(b: &BrowserConfig) -> Self {
+        Self {
+            name: b.name.to_string(),
+            path: b.path.to_string(),
+            flags: b.flags.to_string(),
+            icon: String::new(),
+            emoji: b.emoji.to_string(),
         }
     }
-    if !cur.is_empty() {
-        out.push(cur);
-    }
-    out
 }
 
 fn load_icon(rel: &str) -> slint::Image {
-    if let Ok(exe) = std::env::current_exe() {
-        if let Some(dir) = exe.parent() {
-            let p = dir.join(rel);
-            if p.exists() {
-                return slint::Image::load_from_path(&p).unwrap_or_default();
-            }
-        }
-    }
-    slint::Image::load_from_path(std::path::Path::new(rel)).unwrap_or_default()
+    let from_exe = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(|dir| dir.join(rel)));
+    let path = from_exe
+        .filter(|p| p.exists())
+        .unwrap_or_else(|| std::path::PathBuf::from(rel));
+    slint::Image::load_from_path(&path).unwrap_or_default()
 }
 
 fn to_ui_config(entry: &BrowserEntry) -> BrowserConfig {
@@ -65,14 +63,6 @@ fn to_ui_config(entry: &BrowserEntry) -> BrowserConfig {
     }
 }
 
-fn launch(entry: &BrowserEntry, url: &str) -> std::io::Result<()> {
-    let mut cmd = std::process::Command::new(&entry.path);
-    if !entry.flags.is_empty() {
-        cmd.args(split_flags(&entry.flags));
-    }
-    cmd.arg(url).spawn().map(|_| ())
-}
-
 fn refresh_models(
     browser_model: &slint::VecModel<BrowserConfig>,
     remembered_model: &slint::VecModel<RememberedEntry>,
@@ -91,32 +81,63 @@ fn refresh_models(
     remembered_model.set_vec(rows);
 }
 
-fn init(cfg: Config, url: Option<String>) -> State {
-    let cfg = Rc::new(RefCell::new(cfg));
+fn launch_index(
+    main_window: &MainWindow,
+    browser_model: &slint::VecModel<BrowserConfig>,
+    cfg: &Rc<RefCell<Config>>,
+    index: usize,
+) {
+    let Some(ui_entry) = browser_model.row_data(index) else {
+        return;
+    };
+    main_window.set_selected_index(index as i32);
 
-    let ui_browsers: Vec<BrowserConfig> = cfg
-        .borrow()
-        .browsers
-        .iter()
-        .map(to_ui_config)
-        .collect();
-    let browser_model = Rc::new(slint::VecModel::<BrowserConfig>::from(ui_browsers));
+    let entry = BrowserEntry::from(&ui_entry);
+    let url = main_window.get_current_url().to_string();
+    let remember = main_window.get_remember_choice();
+
+    if launcher::launch_and_remember(cfg, &entry, &url, remember) {
+        let _ = main_window.window().hide();
+    }
+}
+
+fn open_config_in_editor() {
+    let path = config::config_path();
+    if !path.exists() {
+        let mut c = config::load();
+        config::ensure_browsers(&mut c);
+    }
+    let editor = std::process::Command::new("subl")
+        .arg(&path)
+        .spawn()
+        .or_else(|_| std::process::Command::new("notepad").arg(&path).spawn());
+    if let Err(e) = editor {
+        config::log(&format!("cannot open editor: {e}"));
+    }
+}
+
+fn init(cfg: Config, url: Option<String>) -> (MainWindow, SettingsWindow) {
+    let cfg = Rc::new(RefCell::new(cfg));
+    let browser_model = Rc::new(slint::VecModel::<BrowserConfig>::from(vec![]));
     let remembered_model = Rc::new(slint::VecModel::<RememberedEntry>::from(vec![]));
 
     let main_window = MainWindow::new().unwrap();
+    let settings_window = SettingsWindow::new().unwrap();
 
-    if std::env::var("BP_THEME").as_deref() == Ok("light") {
+    if std::env::var(ENV_THEME).as_deref() == Ok("light") {
         main_window.global::<Theme>().set_is_dark(false);
     }
 
     refresh_models(&browser_model, &remembered_model, &cfg.borrow());
 
-    let settings_window = SettingsWindow::new().unwrap();
     settings_window.set_browsers(browser_model.clone().into());
     settings_window.set_remembered(remembered_model.clone().into());
+    main_window.set_browser_model(browser_model.clone().into());
 
     main_window.set_current_url(
-        url.clone().unwrap_or_else(|| "ku6epxboctuk.github.io".into()).into(),
+        url.clone()
+            .unwrap_or_else(|| DEFAULT_URL.to_string())
+            .into(),
     );
     if let Some(u) = &url {
         main_window.set_current_domain(config::domain_of(u).into());
@@ -128,46 +149,8 @@ fn init(cfg: Config, url: Option<String>) -> State {
         let main_window = main_window.clone_strong();
         let browser_model = browser_model.clone();
         let cfg = cfg.clone();
-        move |browser: BrowserConfig| {
-            let index = (0..browser_model.row_count())
-                .find(|&i| {
-                    browser_model
-                        .row_data(i)
-                        .is_some_and(|b| b.name == browser.name)
-                })
-                .unwrap_or(0);
-            main_window.set_selected_index(index as i32);
-
-            let entry = browser_model.row_data(index).expect("row exists");
-            let url = main_window.get_current_url().to_string();
-
-            let entry_ref = BrowserEntry {
-                name: entry.name.to_string(),
-                path: entry.path.to_string(),
-                flags: entry.flags.to_string(),
-                icon: String::new(),
-                emoji: String::new(),
-            };
-            let url = main_window.get_current_url().to_string();
-
-            config::log(&format!(
-                "[bp] launching [{}]: {:?} {:?} {}",
-                index, entry_ref.path, entry_ref.flags, url
-            ));
-
-            match launch(&entry_ref, &url) {
-                Ok(_) => {
-                    let domain = config::domain_of(&url);
-                    if main_window.get_remember_choice() && !domain.is_empty() {
-                        cfg.borrow_mut()
-                            .remembered
-                            .insert(domain, entry_ref.name.clone());
-                        config::save(&cfg.borrow());
-                    }
-                    let _ = main_window.window().hide();
-                }
-                Err(e) => config::log(&format!("[bp] launch failed: {e}")),
-            }
+        move |index: i32| {
+            launch_index(&main_window, &browser_model, &cfg, index.max(0) as usize);
         }
     });
 
@@ -177,36 +160,7 @@ fn init(cfg: Config, url: Option<String>) -> State {
         let cfg = cfg.clone();
         move || {
             let index = main_window.get_selected_index().max(0) as usize;
-            let Some(ui_entry) = browser_model.row_data(index) else {
-                return;
-            };
-            let entry = BrowserEntry {
-                name: ui_entry.name.to_string(),
-                path: ui_entry.path.to_string(),
-                flags: ui_entry.flags.to_string(),
-                icon: String::new(),
-                emoji: String::new(),
-            };
-            let url = main_window.get_current_url().to_string();
-
-            config::log(&format!(
-                "[bp] launching [{}]: {:?} {:?} {}",
-                index, entry.path, entry.flags, url
-            ));
-
-            match launch(&entry, &url) {
-                Ok(_) => {
-                    let domain = config::domain_of(&url);
-                    if main_window.get_remember_choice() && !domain.is_empty() {
-                        cfg.borrow_mut()
-                            .remembered
-                            .insert(domain, entry.name.clone());
-                        config::save(&cfg.borrow());
-                    }
-                    let _ = main_window.window().hide();
-                }
-                Err(e) => config::log(&format!("[bp] launch failed: {e}")),
-            }
+            launch_index(&main_window, &browser_model, &cfg, index);
         }
     });
 
@@ -227,7 +181,7 @@ fn init(cfg: Config, url: Option<String>) -> State {
     });
 
     main_window.on_settings_clicked(move || {
-        println!("Settings clicked");
+        open_config_in_editor();
     });
 
     main_window.on_request_drag({
@@ -239,20 +193,10 @@ fn init(cfg: Config, url: Option<String>) -> State {
         }
     });
 
-    main_window.on_settings_clicked({
+    main_window.on_esc_pressed({
+        let main_window = main_window.clone_strong();
         move || {
-            let path = config::config_path();
-            if !path.exists() {
-                let mut c = config::load();
-                config::ensure_browsers(&mut c);
-            }
-            let editor = std::process::Command::new("subl")
-                .arg(&path)
-                .spawn()
-                .or_else(|_| std::process::Command::new("notepad").arg(&path).spawn());
-            if let Err(e) = editor {
-                config::log(&format!("[bp] cannot open editor: {e}"));
-            }
+            let _ = main_window.window().hide();
         }
     });
 
@@ -265,7 +209,6 @@ fn init(cfg: Config, url: Option<String>) -> State {
             cfg.borrow_mut().browsers.retain(|b| b.name != name);
             config::save(&cfg.borrow());
             refresh_models(&browser_model, &remembered_model, &cfg.borrow());
-            println!("Removed browser: {name}");
         }
     });
 
@@ -278,7 +221,6 @@ fn init(cfg: Config, url: Option<String>) -> State {
             cfg.borrow_mut().remembered.remove(&domain);
             config::save(&cfg.borrow());
             refresh_models(&browser_model, &remembered_model, &cfg.borrow());
-            println!("Removed remembered domain: {domain}");
         }
     });
 
@@ -301,7 +243,6 @@ fn init(cfg: Config, url: Option<String>) -> State {
             config::save(&cfg_ref);
             drop(cfg_ref);
             refresh_models(&browser_model, &remembered_model, &cfg.borrow());
-            println!("Re-detected browsers");
         }
     });
 
@@ -314,13 +255,6 @@ fn init(cfg: Config, url: Option<String>) -> State {
         }
     });
 
-    main_window.on_esc_pressed({
-        let main_window = main_window.clone_strong();
-        move || {
-            let _ = main_window.window().hide();
-        }
-    });
-
     settings_window.window().on_close_requested({
         let main_window = main_window.clone_strong();
         move || {
@@ -329,22 +263,39 @@ fn init(cfg: Config, url: Option<String>) -> State {
         }
     });
 
-    main_window.set_browser_model(browser_model.clone().into());
-    State {
-        main_window,
-        settings_window,
-        browser_model,
-        remembered_model,
-        config: cfg,
-    }
+    (main_window, settings_window)
 }
 
-pub struct State {
-    pub main_window: MainWindow,
-    pub settings_window: SettingsWindow,
-    pub browser_model: Rc<slint::VecModel<BrowserConfig>>,
-    pub remembered_model: Rc<slint::VecModel<RememberedEntry>>,
-    pub config: Rc<RefCell<Config>>,
+fn show_and_run(
+    main_window: MainWindow,
+    settings_window: SettingsWindow,
+    start: std::time::Instant,
+) {
+    let settings_only = std::env::var(ENV_VIEW).as_deref() == Ok(VIEW_SETTINGS);
+
+    if settings_only {
+        settings_window.show().unwrap();
+        let weak = settings_window.as_weak();
+        let _ = slint::invoke_from_event_loop(move || {
+            if let Some(sw) = weak.upgrade() {
+                winit::center_window(sw.window());
+                sw.invoke_restore_focus();
+            }
+            config::log(&format!("cold start -> event loop: {:?}", start.elapsed()));
+        });
+        settings_window.run().unwrap();
+    } else {
+        main_window.show().unwrap();
+        let weak = main_window.as_weak();
+        let _ = slint::invoke_from_event_loop(move || {
+            if let Some(mw) = weak.upgrade() {
+                winit::center_window(mw.window());
+                mw.invoke_restore_focus();
+            }
+            config::log(&format!("cold start -> event loop: {:?}", start.elapsed()));
+        });
+        main_window.run().unwrap();
+    }
 }
 
 pub fn main() {
@@ -359,43 +310,17 @@ pub fn main() {
         let domain = config::domain_of(url);
         if let Some(name) = cfg.remembered.get(&domain).cloned() {
             if cfg.settings.always_ask {
-                config::log(&format!("[bp] '{domain}' remembered -> {name}, but always_ask is on"));
+                config::log(&format!(
+                    "'{domain}' remembered -> {name}, but always_ask is on"
+                ));
             } else if let Some(entry) = cfg.browsers.iter().find(|b| b.name == name) {
-                config::log(&format!("[bp] '{domain}' remembered -> launching {name}"));
-                let _ = launch(entry, url);
+                config::log(&format!("'{domain}' remembered -> launching {name}"));
+                let _ = launcher::launch(entry, url);
                 return;
             }
         }
     }
 
-    let state = init(cfg, url);
-
-    if std::env::var("BP_VIEW").as_deref() == Ok("settings") {
-        state.settings_window.show().unwrap();
-        let weak = state.settings_window.as_weak();
-        let _ = slint::invoke_from_event_loop(move || {
-            if let Some(sw) = weak.upgrade() {
-                winit::center_window(sw.window());
-                sw.invoke_restore_focus();
-            }
-        });
-        state.settings_window.run().unwrap();
-    } else {
-        let main_window = state.main_window.clone_strong();
-        main_window.show().unwrap();
-
-        let weak = main_window.as_weak();
-        let _ = slint::invoke_from_event_loop(move || {
-            if let Some(mw) = weak.upgrade() {
-                winit::center_window(mw.window());
-                mw.invoke_restore_focus();
-            }
-            config::log(&format!(
-                "[bp] cold start -> event loop: {:?}",
-                start.elapsed()
-            ));
-        });
-
-        state.main_window.run().unwrap();
-    }
+    let (main_window, settings_window) = init(cfg, url);
+    show_and_run(main_window, settings_window, start);
 }

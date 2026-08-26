@@ -1,13 +1,14 @@
 import { Theme } from "./theme.slint";
 
 export component BrowserItem inherits Rectangle {
+    in property <int> index;
     in property <image> browser-icon;
     in property <string> emoji;
     in property <bool> icon-mask;
     in property <string> browser-name;
     in property <bool> is-default;
     in property <bool> selected;
-    callback clicked;
+    callback clicked(int);
 
     height: 84px;
     background: transparent;
@@ -20,12 +21,12 @@ export component BrowserItem inherits Rectangle {
             : root.selected ? Theme.surface-elevated
             : Theme.surface-item;
         border-width: root.selected ? 2px : 1px;
-        border-color: root.selected ? #3b82f680 : transparent;
+        border-color: root.selected ? Theme.accent-ring : transparent;
 
         touch := TouchArea {
             mouse-cursor: pointer;
             clicked => {
-                root.clicked();
+                root.clicked(root.index);
             }
         }
 
@@ -84,7 +85,7 @@ export component BrowserItem inherits Rectangle {
                     if root.is-default: Rectangle {
                         height: 22px;
                         border-radius: 11px;
-                        background: #3b82f620;
+                        background: Theme.accent-soft;
 
                         HorizontalLayout {
                             padding-left: 10px;
@@ -109,7 +110,7 @@ export component BrowserItem inherits Rectangle {
                     width: 16px;
                     height: 16px;
                     source: @image-url("../icons/check.svg");
-                    colorize: #3b82f6;
+                    colorize: Theme.accent;
                     visible: root.selected;
                 }
 
