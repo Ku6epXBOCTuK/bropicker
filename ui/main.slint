@@ -2,7 +2,8 @@ import { Button, CheckBox, ListView } from "std-widgets.slint";
 import { BrowserItem } from "./browser_item.slint";
 import { Header } from "./header.slint";
 import { Footer } from "./footer.slint";
-import { BrowserConfig } from "./types.slint";
+import { SettingsView } from "./settings.slint";
+import { BrowserConfig, RememberedEntry } from "./types.slint";
 import { Theme } from "theme.slint";
 
 export { Theme }
@@ -62,11 +63,17 @@ export component MainWindow inherits Window {
     in-out property <bool> remember-choice: false;
     in-out property <bool> always-ask: true;
     in property <int> selected-index: 0;
+    in property <[RememberedEntry]> remembered-list: [];
+    in-out property <bool> settings-open: false;
 
     callback launch-browser(BrowserConfig);
     callback toggle-remember(bool);
     callback toggle-always-ask(bool);
     callback settings-clicked();
+    callback settings-closed();
+    callback remove-browser(string);
+    callback remove-remembered(string);
+    callback redetect-browsers();
     callback open-clicked();
     callback request-drag();
     callback esc-pressed();
@@ -106,7 +113,24 @@ export component MainWindow inherits Window {
             border-width: 1px;
             border-color: Theme.border-main;
 
-            VerticalLayout {
+            if root.settings-open: SettingsView {
+                browsers: root.browser-model;
+                remembered: root.remembered-list;
+                back => {
+                    root.settings-closed();
+                }
+                remove-browser(name) => {
+                    root.remove-browser(name);
+                }
+                remove-remembered(domain) => {
+                    root.remove-remembered(domain);
+                }
+                redetect => {
+                    root.redetect-browsers();
+                }
+            }
+
+            if !root.settings-open: VerticalLayout {
 
                 Header {
                     url: current-url;

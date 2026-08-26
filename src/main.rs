@@ -38,6 +38,24 @@ fn launch(entry: &BrowserEntry, url: &str) -> std::io::Result<()> {
     cmd.arg(url).spawn().map(|_| ())
 }
 
+fn refresh_models(
+    browser_model: &slint::VecModel<BrowserConfig>,
+    remembered_model: &slint::VecModel<RememberedEntry>,
+    cfg: &Config,
+) {
+    let rows: Vec<BrowserConfig> = cfg.browsers.iter().map(to_ui_config).collect();
+    browser_model.set_vec(rows);
+    let rows: Vec<RememberedEntry> = cfg
+        .remembered
+        .iter()
+        .map(|(d, b)| RememberedEntry {
+            domain: d.clone().into(),
+            browser: b.clone().into(),
+        })
+        .collect();
+    remembered_model.set_vec(rows);
+}
+
 fn init(cfg: Config, url: Option<String>) -> State {
     let cfg = Rc::new(RefCell::new(cfg));
 
@@ -48,11 +66,18 @@ fn init(cfg: Config, url: Option<String>) -> State {
         .map(to_ui_config)
         .collect();
     let browser_model = Rc::new(slint::VecModel::<BrowserConfig>::from(ui_browsers));
+    let remembered_model = Rc::new(slint::VecModel::<RememberedEntry>::from(vec![]));
 
     let main_window = MainWindow::new().unwrap();
 
     if std::env::var("BP_THEME").as_deref() == Ok("light") {
         main_window.global::<Theme>().set_is_dark(false);
+    }
+
+    refresh_models(&browser_model, &remembered_model, &cfg.borrow());
+
+    if std::env::var("BP_VIEW").as_deref() == Ok("settings") {
+        main_window.set_settings_open(true);
     }
 
     main_window.set_current_url(
@@ -176,17 +201,90 @@ fn init(cfg: Config, url: Option<String>) -> State {
         }
     });
 
+    main_window.on_settings_clicked({
+        let main_window = main_window.clone_strong();
+        let browser_model = browser_model.clone();
+        let remembered_model = remembered_model.clone();
+        let cfg = cfg.clone();
+        move || {
+            refresh_models(&browser_model, &remembered_model, &cfg.borrow());
+            main_window.set_settings_open(true);
+        }
+    });
+
+    main_window.on_settings_closed({
+        let main_window = main_window.clone_strong();
+        move || {
+            main_window.set_settings_open(false);
+        }
+    });
+
+    main_window.on_remove_browser({
+        let browser_model = browser_model.clone();
+        let remembered_model = remembered_model.clone();
+        let cfg = cfg.clone();
+        move |name| {
+            let name = name.to_string();
+            cfg.borrow_mut().browsers.retain(|b| b.name != name);
+            config::save(&cfg.borrow());
+            refresh_models(&browser_model, &remembered_model, &cfg.borrow());
+            println!("Removed browser: {name}");
+        }
+    });
+
+    main_window.on_remove_remembered({
+        let browser_model = browser_model.clone();
+        let remembered_model = remembered_model.clone();
+        let cfg = cfg.clone();
+        move |domain| {
+            let domain = domain.to_string();
+            cfg.borrow_mut().remembered.remove(&domain);
+            config::save(&cfg.borrow());
+            refresh_models(&browser_model, &remembered_model, &cfg.borrow());
+            println!("Removed remembered domain: {domain}");
+        }
+    });
+
+    main_window.on_redetect_browsers({
+        let browser_model = browser_model.clone();
+        let remembered_model = remembered_model.clone();
+        let cfg = cfg.clone();
+        move || {
+            let detected = config::detect_browsers();
+            let mut cfg_ref = cfg.borrow_mut();
+            for entry in detected {
+                if !cfg_ref
+                    .browsers
+                    .iter()
+                    .any(|b| b.path.eq_ignore_ascii_case(&entry.path))
+                {
+                    cfg_ref.browsers.push(entry);
+                }
+            }
+            config::save(&cfg_ref);
+            drop(cfg_ref);
+            refresh_models(&browser_model, &remembered_model, &cfg.borrow());
+            println!("Re-detected browsers");
+        }
+    });
+
     main_window.on_esc_pressed({
         let main_window = main_window.clone_strong();
         move || {
-            let _ = main_window.window().hide();
+            if main_window.get_settings_open() {
+                main_window.set_settings_open(false);
+            } else {
+                let _ = main_window.window().hide();
+            }
         }
     });
 
     main_window.set_browser_model(browser_model.clone().into());
+    main_window.set_remembered_list(remembered_model.clone().into());
     State {
         main_window,
         browser_model,
+        remembered_model,
         config: cfg,
     }
 }
@@ -194,6 +292,7 @@ fn init(cfg: Config, url: Option<String>) -> State {
 pub struct State {
     pub main_window: MainWindow,
     pub browser_model: Rc<slint::VecModel<BrowserConfig>>,
+    pub remembered_model: Rc<slint::VecModel<RememberedEntry>>,
     pub config: Rc<RefCell<Config>>,
 }
 
