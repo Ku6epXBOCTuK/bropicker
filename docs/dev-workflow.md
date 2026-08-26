@@ -149,6 +149,13 @@ HTML-макеты → PNG: **headless Edge** (`--headless --screenshot`), он �
       cwd = system32 и иконки бы отвалились); проверено запуском из
       LOCALAPPDATA с cwd=System32
 - [x] Release-профиль: lto + codegen-units=1 + strip
+- [x] Release без консоли: `windows_subsystem="windows"` только для не-debug
+      (в debug консоль остаётся); весь вывод → `%APPDATA%\bropicker\bropicker.log`
+      (config::log с unix-timestamp)
+- [x] Парсер флагов понимает кавычки (`split_flags`) — профили браузеров:
+      `flags = '--profile-directory="Profile 1"'` (Chrome), `-P "Work"` (Firefox);
+      пример: docs/config.example.toml
+- [x] Cold start release: 131 ms (после добавления файлового лога)
 
 ## Этап F — релиз
 

@@ -1,7 +1,26 @@
-use std::collections::HashMap;
+﻿use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
+
+pub fn log(msg: &str) {
+    use std::io::Write;
+    let Ok(appdata) = std::env::var("APPDATA") else {
+        return;
+    };
+    let dir = Path::new(&appdata).join("bropicker");
+    if std::fs::create_dir_all(&dir).is_err() {
+        return;
+    }
+    let path = dir.join("bropicker.log");
+    let ts = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(&path) {
+        let _ = writeln!(f, "[{ts}] {msg}");
+    }
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct BrowserEntry {
@@ -57,7 +76,7 @@ pub fn load() -> Config {
     let path = config_path();
     match std::fs::read_to_string(&path) {
         Ok(s) => toml::from_str(&s).unwrap_or_else(|e| {
-            eprintln!("[bp] config parse error ({path:?}): {e}");
+            crate::config::log(&format!("[bp] config parse error ({path:?}): {e}"));
             Config::default()
         }),
         Err(_) => Config::default(),
@@ -72,17 +91,17 @@ pub fn save(cfg: &Config) {
     match toml::to_string_pretty(cfg) {
         Ok(s) => {
             if let Err(e) = std::fs::write(&path, s) {
-                eprintln!("[bp] config save failed ({path:?}): {e}");
+                log(&format!("[bp] config save failed ({path:?}): {e}"));
             }
         }
-        Err(e) => eprintln!("[bp] config serialize failed: {e}"),
+        Err(e) => log(&format!("[bp] config serialize failed: {e}")),
     }
 }
 
 pub fn ensure_browsers(cfg: &mut Config) {
     if cfg.browsers.is_empty() {
         cfg.browsers = detect_browsers();
-        eprintln!("[bp] autodetected {} browsers", cfg.browsers.len());
+        log(&format!("[bp] autodetected {} browsers", cfg.browsers.len()));
         if !cfg.browsers.is_empty() {
             save(cfg);
         }
@@ -163,7 +182,7 @@ pub fn icon_for(name: &str) -> &'static str {
         "logos/opera_48x48.png"
     } else if n.contains("brave") {
         "logos/brave_48x48.png"
-    } else if n.contains("яндекс") || n.contains("yandex") {
+    } else if n.contains("СЏРЅРґРµРєСЃ") || n.contains("yandex") {
         "logos/yandex_48x48.png"
     } else {
         "icons/globe.svg"

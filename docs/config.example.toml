@@ -1,0 +1,40 @@
+# bropicker config
+# Расположение: %APPDATA%\bropicker\config.toml
+# Открывается из пикера кнопкой шестерёнки (subl/notepad)
+
+# [[browsers]] — один блок на запись пикера.
+# path    — полный путь к exe (или имя из PATH)
+# flags   — аргументы запуска; пробелы внутри значения — в кавычках
+# icon    — необязательно: путь к png/svg, иначе подбирается по имени
+
+[[browsers]]
+name = "Firefox"
+path = 'C:\Program Files\Mozilla Firefox\firefox.exe'
+flags = ""
+
+# Профили Chrome: имена каталогов профилей смотри на chrome://version
+# (Profile Path: ...\User Data\Default → "Default",
+#                 ...\User Data\Profile 1 → "Profile 1")
+
+[[browsers]]
+name = "Chrome — Work"
+path = 'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe'
+flags = '--profile-directory="Default"'
+
+[[browsers]]
+name = "Chrome — Personal"
+path = 'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe'
+flags = '--profile-directory="Profile 1"'
+
+[[browsers]]
+name = "Firefox — Work"
+path = 'C:\Program Files\Mozilla Firefox\firefox.exe'
+flags = '-P "Work"'
+
+# Запомненные домены: домен = имя записи из [[browsers]]
+[remembered]
+"github.com" = "Chrome — Work"
+
+[settings]
+remember_choice = true
+always_ask = true

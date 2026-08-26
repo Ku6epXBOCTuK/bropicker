@@ -1,3 +1,5 @@
+#![cfg_attr(all(not(debug_assertions), target_os = "windows"), windows_subsystem = "windows")]
+
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -10,6 +12,27 @@ mod winit;
 use config::{BrowserEntry, Config};
 
 slint::include_modules!();
+
+fn split_flags(flags: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut cur = String::new();
+    let mut in_quotes = false;
+    for c in flags.chars() {
+        match c {
+            '"' => in_quotes = !in_quotes,
+            ' ' if !in_quotes => {
+                if !cur.is_empty() {
+                    out.push(std::mem::take(&mut cur));
+                }
+            }
+            _ => cur.push(c),
+        }
+    }
+    if !cur.is_empty() {
+        out.push(cur);
+    }
+    out
+}
 
 fn load_icon(rel: &str) -> slint::Image {
     if let Ok(exe) = std::env::current_exe() {
@@ -41,7 +64,7 @@ fn to_ui_config(entry: &BrowserEntry) -> BrowserConfig {
 fn launch(entry: &BrowserEntry, url: &str) -> std::io::Result<()> {
     let mut cmd = std::process::Command::new(&entry.path);
     if !entry.flags.is_empty() {
-        cmd.args(entry.flags.split_whitespace());
+        cmd.args(split_flags(&entry.flags));
     }
     cmd.arg(url).spawn().map(|_| ())
 }
@@ -114,17 +137,18 @@ fn init(cfg: Config, url: Option<String>) -> State {
             let entry = browser_model.row_data(index).expect("row exists");
             let url = main_window.get_current_url().to_string();
 
-            println!(
-                "Launching [{}]: {:?} {:?} {}",
-                index, entry.path, entry.flags, url
-            );
-
             let entry_ref = BrowserEntry {
                 name: entry.name.to_string(),
                 path: entry.path.to_string(),
                 flags: entry.flags.to_string(),
                 icon: String::new(),
             };
+            let url = main_window.get_current_url().to_string();
+
+            config::log(&format!(
+                "[bp] launching [{}]: {:?} {:?} {}",
+                index, entry_ref.path, entry_ref.flags, url
+            ));
 
             match launch(&entry_ref, &url) {
                 Ok(_) => {
@@ -137,7 +161,7 @@ fn init(cfg: Config, url: Option<String>) -> State {
                     }
                     let _ = main_window.window().hide();
                 }
-                Err(e) => eprintln!("launch failed: {e}"),
+                Err(e) => config::log(&format!("[bp] launch failed: {e}")),
             }
         }
     });
@@ -159,10 +183,10 @@ fn init(cfg: Config, url: Option<String>) -> State {
             };
             let url = main_window.get_current_url().to_string();
 
-            println!(
-                "Launching [{}]: {:?} {:?} {}",
+            config::log(&format!(
+                "[bp] launching [{}]: {:?} {:?} {}",
                 index, entry.path, entry.flags, url
-            );
+            ));
 
             match launch(&entry, &url) {
                 Ok(_) => {
@@ -175,7 +199,7 @@ fn init(cfg: Config, url: Option<String>) -> State {
                     }
                     let _ = main_window.window().hide();
                 }
-                Err(e) => eprintln!("launch failed: {e}"),
+                Err(e) => config::log(&format!("[bp] launch failed: {e}")),
             }
         }
     });
@@ -221,7 +245,7 @@ fn init(cfg: Config, url: Option<String>) -> State {
                 .spawn()
                 .or_else(|_| std::process::Command::new("notepad").arg(&path).spawn());
             if let Err(e) = editor {
-                eprintln!("[bp] cannot open editor: {e}");
+                config::log(&format!("[bp] cannot open editor: {e}"));
             }
         }
     });
@@ -329,9 +353,9 @@ pub fn main() {
         let domain = config::domain_of(url);
         if let Some(name) = cfg.remembered.get(&domain).cloned() {
             if cfg.settings.always_ask {
-                eprintln!("[bp] '{domain}' remembered -> {name}, but always_ask is on");
+                config::log(&format!("[bp] '{domain}' remembered -> {name}, but always_ask is on"));
             } else if let Some(entry) = cfg.browsers.iter().find(|b| b.name == name) {
-                eprintln!("[bp] '{domain}' remembered -> launching {name}");
+                config::log(&format!("[bp] '{domain}' remembered -> launching {name}"));
                 let _ = launch(entry, url);
                 return;
             }
@@ -360,7 +384,10 @@ pub fn main() {
                 winit::center_window(mw.window());
                 mw.invoke_restore_focus();
             }
-            eprintln!("[bp] cold start -> event loop: {:?}", start.elapsed());
+            config::log(&format!(
+                "[bp] cold start -> event loop: {:?}",
+                start.elapsed()
+            ));
         });
 
         state.main_window.run().unwrap();
