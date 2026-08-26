@@ -2,6 +2,8 @@ import { Theme } from "./theme.slint";
 
 export component BrowserItem inherits Rectangle {
     in property <image> browser-icon;
+    in property <string> emoji;
+    in property <bool> icon-mask;
     in property <string> browser-name;
     in property <bool> is-default;
     in property <bool> selected;
@@ -37,7 +39,25 @@ export component BrowserItem inherits Rectangle {
                 border-radius: 12px;
                 background: Theme.surface-elevated;
 
-                Image {
+                if root.emoji != "": Text {
+                    width: 100%;
+                    height: 100%;
+                    text: root.emoji;
+                    font-size: 26px;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+
+                if root.emoji == "" && root.icon-mask: Image {
+                    x: (parent.width - self.width) / 2;
+                    y: (parent.height - self.height) / 2;
+                    width: 30px;
+                    height: 30px;
+                    source: root.browser-icon;
+                    colorize: Theme.text-muted;
+                }
+
+                if root.emoji == "" && !root.icon-mask: Image {
                     x: (parent.width - self.width) / 2;
                     y: (parent.height - self.height) / 2;
                     width: 30px;

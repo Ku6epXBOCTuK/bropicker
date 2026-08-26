@@ -54,6 +54,10 @@ fn to_ui_config(entry: &BrowserEntry) -> BrowserConfig {
     };
     BrowserConfig {
         icon: load_icon(icon_rel),
+        emoji: entry.emoji.clone().into(),
+        icon_mask: entry.icon.is_empty()
+            && entry.emoji.is_empty()
+            && !config::is_known_browser(&entry.name),
         name: entry.name.clone().into(),
         path: entry.path.clone().into(),
         flags: entry.flags.clone().into(),
@@ -142,6 +146,7 @@ fn init(cfg: Config, url: Option<String>) -> State {
                 path: entry.path.to_string(),
                 flags: entry.flags.to_string(),
                 icon: String::new(),
+                emoji: String::new(),
             };
             let url = main_window.get_current_url().to_string();
 
@@ -180,6 +185,7 @@ fn init(cfg: Config, url: Option<String>) -> State {
                 path: ui_entry.path.to_string(),
                 flags: ui_entry.flags.to_string(),
                 icon: String::new(),
+                emoji: String::new(),
             };
             let url = main_window.get_current_url().to_string();
 

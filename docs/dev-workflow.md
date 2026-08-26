@@ -155,6 +155,10 @@ HTML-макеты → PNG: **headless Edge** (`--headless --screenshot`), он �
 - [x] Парсер флагов понимает кавычки (`split_flags`) — профили браузеров:
       `flags = '--profile-directory="Profile 1"'` (Chrome), `-P "Work"` (Firefox);
       пример: docs/config.example.toml
+- [x] Эмодзи-иконка для записи: поле `emoji` в конфиге (приоритет над icon) —
+      различение профилей одного браузера; фолбэк-глобус colorize по теме
+      (был чёрным на тёмной), цветные PNG логотипов не трогаются
+      (`icon-mask` только для генерик-глобуса)
 - [x] Cold start release: 131 ms (после добавления файлового лога)
 
 ## Этап F — релиз

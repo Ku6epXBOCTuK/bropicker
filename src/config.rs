@@ -30,6 +30,8 @@ pub struct BrowserEntry {
     pub flags: String,
     #[serde(default)]
     pub icon: String,
+    #[serde(default)]
+    pub emoji: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -165,6 +167,7 @@ pub fn detect_browsers() -> Vec<BrowserEntry> {
                 path,
                 flags: String::new(),
                 icon: String::new(),
+                emoji: String::new(),
             });
         }
     }
@@ -173,18 +176,27 @@ pub fn detect_browsers() -> Vec<BrowserEntry> {
 }
 
 pub fn icon_for(name: &str) -> &'static str {
-    let n = name.to_lowercase();
-    if n.contains("firefox") {
-        "logos/firefox_48x48.png"
-    } else if n.contains("chrome") {
-        "logos/chrome_48x48.png"
-    } else if n.contains("opera") {
-        "logos/opera_48x48.png"
-    } else if n.contains("brave") {
-        "logos/brave_48x48.png"
-    } else if n.contains("СЏРЅРґРµРєСЃ") || n.contains("yandex") {
-        "logos/yandex_48x48.png"
+    if is_known_browser(name) {
+        KNOWN_ICONS
+            .iter()
+            .find(|(kw, _)| name.to_lowercase().contains(kw))
+            .map(|(_, path)| *path)
+            .unwrap_or("icons/globe.svg")
     } else {
         "icons/globe.svg"
     }
+}
+
+const KNOWN_ICONS: &[(&str, &str)] = &[
+    ("firefox", "logos/firefox_48x48.png"),
+    ("chrome", "logos/chrome_48x48.png"),
+    ("opera", "logos/opera_48x48.png"),
+    ("brave", "logos/brave_48x48.png"),
+    ("яндекс", "logos/yandex_48x48.png"),
+    ("yandex", "logos/yandex_48x48.png"),
+];
+
+pub fn is_known_browser(name: &str) -> bool {
+    let n = name.to_lowercase();
+    KNOWN_ICONS.iter().any(|(kw, _)| n.contains(kw))
 }

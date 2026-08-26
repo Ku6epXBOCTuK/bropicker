@@ -6,6 +6,8 @@
 # path    — полный путь к exe (или имя из PATH)
 # flags   — аргументы запуска; пробелы внутри значения — в кавычках
 # icon    — необязательно: путь к png/svg, иначе подбирается по имени
+# emoji   — необязательно: эмодзи вместо иконки (удобно различать профили);
+#           имеет приоритет над icon
 
 [[browsers]]
 name = "Firefox"
@@ -20,16 +22,19 @@ flags = ""
 name = "Chrome — Work"
 path = 'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe'
 flags = '--profile-directory="Default"'
+emoji = "💼"
 
 [[browsers]]
 name = "Chrome — Personal"
 path = 'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe'
 flags = '--profile-directory="Profile 1"'
+emoji = "🏠"
 
 [[browsers]]
 name = "Firefox — Work"
 path = 'C:\Program Files\Mozilla Firefox\firefox.exe'
 flags = '-P "Work"'
+emoji = "🦊"
 
 # Запомненные домены: домен = имя записи из [[browsers]]
 [remembered]

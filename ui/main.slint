@@ -129,6 +129,8 @@ export component MainWindow inherits Window {
 
                         for browser[i] in root.browser-model: BrowserItem {
                             browser-icon: browser.icon;
+                            emoji: browser.emoji;
+                            icon-mask: browser.icon-mask;
                             browser-name: browser.name;
                             is-default: browser.is-default;
                             selected: i == root.selected-index;
