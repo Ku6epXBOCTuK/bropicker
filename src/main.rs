@@ -76,9 +76,9 @@ fn init(cfg: Config, url: Option<String>) -> State {
 
     refresh_models(&browser_model, &remembered_model, &cfg.borrow());
 
-    if std::env::var("BP_VIEW").as_deref() == Ok("settings") {
-        main_window.set_settings_open(true);
-    }
+    let settings_window = SettingsWindow::new().unwrap();
+    settings_window.set_browsers(browser_model.clone().into());
+    settings_window.set_remembered(remembered_model.clone().into());
 
     main_window.set_current_url(
         url.clone().unwrap_or_else(|| "ku6epxboctuk.github.io".into()).into(),
@@ -202,24 +202,20 @@ fn init(cfg: Config, url: Option<String>) -> State {
     });
 
     main_window.on_settings_clicked({
-        let main_window = main_window.clone_strong();
-        let browser_model = browser_model.clone();
-        let remembered_model = remembered_model.clone();
-        let cfg = cfg.clone();
+        let settings_window = settings_window.clone_strong();
         move || {
-            refresh_models(&browser_model, &remembered_model, &cfg.borrow());
-            main_window.set_settings_open(true);
+            settings_window.show().unwrap();
+            let weak = settings_window.as_weak();
+            let _ = slint::invoke_from_event_loop(move || {
+                if let Some(sw) = weak.upgrade() {
+                    winit::center_window(sw.window());
+                    sw.invoke_restore_focus();
+                }
+            });
         }
     });
 
-    main_window.on_settings_closed({
-        let main_window = main_window.clone_strong();
-        move || {
-            main_window.set_settings_open(false);
-        }
-    });
-
-    main_window.on_remove_browser({
+    settings_window.on_remove_browser({
         let browser_model = browser_model.clone();
         let remembered_model = remembered_model.clone();
         let cfg = cfg.clone();
@@ -232,7 +228,7 @@ fn init(cfg: Config, url: Option<String>) -> State {
         }
     });
 
-    main_window.on_remove_remembered({
+    settings_window.on_remove_remembered({
         let browser_model = browser_model.clone();
         let remembered_model = remembered_model.clone();
         let cfg = cfg.clone();
@@ -245,7 +241,7 @@ fn init(cfg: Config, url: Option<String>) -> State {
         }
     });
 
-    main_window.on_redetect_browsers({
+    settings_window.on_redetect({
         let browser_model = browser_model.clone();
         let remembered_model = remembered_model.clone();
         let cfg = cfg.clone();
@@ -268,21 +264,34 @@ fn init(cfg: Config, url: Option<String>) -> State {
         }
     });
 
+    settings_window.on_esc_pressed({
+        let settings_window = settings_window.clone_strong();
+        let main_window = main_window.clone_strong();
+        move || {
+            let _ = settings_window.window().hide();
+            main_window.invoke_restore_focus();
+        }
+    });
+
     main_window.on_esc_pressed({
         let main_window = main_window.clone_strong();
         move || {
-            if main_window.get_settings_open() {
-                main_window.set_settings_open(false);
-            } else {
-                let _ = main_window.window().hide();
-            }
+            let _ = main_window.window().hide();
+        }
+    });
+
+    settings_window.window().on_close_requested({
+        let main_window = main_window.clone_strong();
+        move || {
+            main_window.invoke_restore_focus();
+            slint::CloseRequestResponse::HideWindow
         }
     });
 
     main_window.set_browser_model(browser_model.clone().into());
-    main_window.set_remembered_list(remembered_model.clone().into());
     State {
         main_window,
+        settings_window,
         browser_model,
         remembered_model,
         config: cfg,
@@ -291,6 +300,7 @@ fn init(cfg: Config, url: Option<String>) -> State {
 
 pub struct State {
     pub main_window: MainWindow,
+    pub settings_window: SettingsWindow,
     pub browser_model: Rc<slint::VecModel<BrowserConfig>>,
     pub remembered_model: Rc<slint::VecModel<RememberedEntry>>,
     pub config: Rc<RefCell<Config>>,
@@ -316,15 +326,29 @@ pub fn main() {
     }
 
     let state = init(cfg, url);
-    let main_window = state.main_window.clone_strong();
-    main_window.show().unwrap();
 
-    let weak = main_window.as_weak();
-    let _ = slint::invoke_from_event_loop(move || {
-        if let Some(mw) = weak.upgrade() {
-            winit::center_window(mw.window());
-        }
-    });
+    if std::env::var("BP_VIEW").as_deref() == Ok("settings") {
+        state.settings_window.show().unwrap();
+        let weak = state.settings_window.as_weak();
+        let _ = slint::invoke_from_event_loop(move || {
+            if let Some(sw) = weak.upgrade() {
+                winit::center_window(sw.window());
+                sw.invoke_restore_focus();
+            }
+        });
+        state.settings_window.run().unwrap();
+    } else {
+        let main_window = state.main_window.clone_strong();
+        main_window.show().unwrap();
 
-    main_window.run().unwrap();
+        let weak = main_window.as_weak();
+        let _ = slint::invoke_from_event_loop(move || {
+            if let Some(mw) = weak.upgrade() {
+                winit::center_window(mw.window());
+                mw.invoke_restore_focus();
+            }
+        });
+
+        state.main_window.run().unwrap();
+    }
 }
