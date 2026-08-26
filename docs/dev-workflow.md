@@ -129,9 +129,42 @@ HTML-макеты → PNG: **headless Edge** (`--headless --screenshot`), он �
 - [x] env `BP_VIEW=settings` — запуск сразу с окном настроек (без пикера);
       нюанс: `run()` авто-показывает своё окно, поэтому в этом режиме цикл
       крутится на settings_window
-- [ ] Редактирование браузера (имя/путь/флаги через LineEdit) — следующий шаг
+- [ ] Редактирование браузера (имя/путь/флаги через LineEdit) — ОТЛОЖЕНО (решено:
+      cog в пикере открывает `config.toml` в редакторе — `subl`, fallback `notepad`;
+      если файла нет — создаётся с автодетектом). Окно SettingsWindow осталось
+      в коде (недоступно из UI), dev-доступ: env `BP_VIEW=settings`
 - [ ] Чтение флагов из .lnk ярлыков (крейс `lnk`) — по желанию
 - [ ] Добавить логотипы Edge/Zen в logos/ (пересоздать набор из alrrr/browser-logos)
+
+### E3 — доведение до ежедневного использования — ГОТОВО
+
+- [x] cog → открыть конфиг в редакторе (subl → notepad)
+- [x] Замер cold start: Instant в main → печать при старте event loop
+- [x] `tools/register.ps1` (+ `-Uninstall`): **ставит пакет в
+      `%LOCALAPPDATA%\bropicker\` (exe + logos + icons)** и регистрирует
+      ProgId/Capabilities/RegisteredApplications в HKCU на путь из LOCALAPPDATA
+      (не target\ — переживает cargo clean и перенос репо), открывает
+      ms-settings:defaultapps
+- [x] Иконки резолвятся от папки exe (иначе при запуске обработчиком ссылок
+      cwd = system32 и иконки бы отвалились); проверено запуском из
+      LOCALAPPDATA с cwd=System32
+- [x] Release-профиль: lto + codegen-units=1 + strip
+
+## Этап F — релиз
+
+- [x] `[profile.release]`: lto, codegen-units=1, strip
+- [x] Замер cold start (release, до старта event loop): **183 ms холодный /
+      120-122 ms тёплый**; из LOCALAPPDATA первый запуск 153 ms.
+      Цель <100 ms чуть не достигнута; варианты оптимизации, если захочется:
+      renderer-femtovg вместо skia (быстрее init GPU), отложенная загрузка
+      конфига. Пока считаем приемлемым
+- [ ] Иконка exe (.ico через build.rs winres)
+- [ ] Выбрать лицензию проекта: GPLv3 (опенсорс) или Royalty-free Slint (закрытый десктоп,
+      атрибуция AboutSlint) — зафиксировать в README и LICENSE
+- [ ] Скриншоты в README из tools/out
+- [ ] Ручной сценарий приёмки: register → клик ссылки в другом приложении →
+      пикер → выбор → вкладка открылась; повторный клик того же домена при
+      always_ask=off → сразу браузер
 
 ## Этап F — релиз
 

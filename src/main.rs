@@ -12,6 +12,14 @@ use config::{BrowserEntry, Config};
 slint::include_modules!();
 
 fn load_icon(rel: &str) -> slint::Image {
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(dir) = exe.parent() {
+            let p = dir.join(rel);
+            if p.exists() {
+                return slint::Image::load_from_path(&p).unwrap_or_default();
+            }
+        }
+    }
     slint::Image::load_from_path(std::path::Path::new(rel)).unwrap_or_default()
 }
 
@@ -202,16 +210,19 @@ fn init(cfg: Config, url: Option<String>) -> State {
     });
 
     main_window.on_settings_clicked({
-        let settings_window = settings_window.clone_strong();
         move || {
-            settings_window.show().unwrap();
-            let weak = settings_window.as_weak();
-            let _ = slint::invoke_from_event_loop(move || {
-                if let Some(sw) = weak.upgrade() {
-                    winit::center_window(sw.window());
-                    sw.invoke_restore_focus();
-                }
-            });
+            let path = config::config_path();
+            if !path.exists() {
+                let mut c = config::load();
+                config::ensure_browsers(&mut c);
+            }
+            let editor = std::process::Command::new("subl")
+                .arg(&path)
+                .spawn()
+                .or_else(|_| std::process::Command::new("notepad").arg(&path).spawn());
+            if let Err(e) = editor {
+                eprintln!("[bp] cannot open editor: {e}");
+            }
         }
     });
 
@@ -307,6 +318,8 @@ pub struct State {
 }
 
 pub fn main() {
+    let start = std::time::Instant::now();
+
     let mut cfg = config::load();
     config::ensure_browsers(&mut cfg);
 
@@ -347,6 +360,7 @@ pub fn main() {
                 winit::center_window(mw.window());
                 mw.invoke_restore_focus();
             }
+            eprintln!("[bp] cold start -> event loop: {:?}", start.elapsed());
         });
 
         state.main_window.run().unwrap();
