@@ -1,7 +1,7 @@
 use i_slint_backend_winit::WinitWindowAccessor;
 use i_slint_backend_winit::winit::dpi::PhysicalPosition;
 use i_slint_backend_winit::winit::monitor::MonitorHandle;
-use i_slint_backend_winit::winit::window::Window;
+use i_slint_backend_winit::winit::window::{Window, WindowLevel};
 use windows::Win32::Foundation::POINT;
 use windows::Win32::UI::WindowsAndMessaging::GetCursorPos;
 
@@ -29,8 +29,9 @@ fn get_cursor_monitor(window: &Window) -> Option<MonitorHandle> {
 pub fn center_window(window: &slint::Window) {
     if window.has_winit_window() {
         window.with_winit_window(|window: &Window| {
-            let monitor = get_cursor_monitor(window)
-                .or_else(|| window.current_monitor());
+            window.set_window_level(WindowLevel::AlwaysOnTop);
+            window.focus_window();
+            let monitor = get_cursor_monitor(window).or_else(|| window.current_monitor());
             if let Some(monitor) = monitor {
                 set_centered(window, &monitor);
             }
