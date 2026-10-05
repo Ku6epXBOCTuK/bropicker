@@ -8,6 +8,14 @@ export global Theme {
     out property <brush> surface-item: is-dark ? #1e293b4d : #f8fafc;
     out property <brush> surface-elevated: is-dark ? #1e293b80 : #f8fafc;
     out property <brush> surface-hover: is-dark ? #1e293b : #ffffff;
+    out property <brush> icon-backplate: is-dark ? #334155 : #e2e8f0;
+
+    out property <[brush]> backplates: [
+        @linear-gradient(135deg, #fb923c, #ef4444),
+        @linear-gradient(135deg, #f472b6, #e11d48),
+        @linear-gradient(135deg, #22d3ee, #10b981),
+        @linear-gradient(135deg, #a78bfa, #7c3aed),
+    ];
 
     out property <brush> border-main: is-dark ? #334155 : #e2e8f0;
 

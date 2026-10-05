@@ -38,7 +38,7 @@ export component BrowserItem inherits Rectangle {
                 width: 48px;
                 vertical-stretch: 0;
                 border-radius: 12px;
-                background: Theme.surface-elevated;
+                background: Theme.backplates[mod(root.index, 4)];
 
                 if root.emoji != "": Text {
                     width: 100%;
@@ -55,7 +55,7 @@ export component BrowserItem inherits Rectangle {
                     width: 30px;
                     height: 30px;
                     source: root.browser-icon;
-                    colorize: Theme.text-muted;
+                    colorize: #ffffff;
                 }
 
                 if root.emoji == "" && !root.icon-mask: Image {
@@ -103,22 +103,44 @@ export component BrowserItem inherits Rectangle {
             }
 
             VerticalLayout {
-                width: 20px;
                 alignment: center;
 
-                Image {
-                    width: 16px;
-                    height: 16px;
-                    source: @image-url("../icons/check.svg");
-                    colorize: Theme.accent;
-                    visible: root.selected;
+                if root.selected: Rectangle {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 16px;
+                    background: Theme.accent;
+
+                    Image {
+                        x: (parent.width - self.width) / 2;
+                        y: (parent.height - self.height) / 2;
+                        width: 16px;
+                        height: 16px;
+                        source: @image-url("../icons/check.svg");
+                        colorize: #ffffff;
+                    }
                 }
 
-                Text {
-                    text: "›";
-                    color: Theme.text-muted;
-                    font-size: 16px;
-                    visible: !root.selected;
+                if !root.selected: Rectangle {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 16px;
+                    background: Theme.icon-backplate;
+
+                    Path {
+                        x: (parent.width - self.width) / 2;
+                        y: (parent.height - self.height) / 2;
+                        width: 16px;
+                        height: 16px;
+                        viewbox-width: 16;
+                        viewbox-height: 16;
+                        stroke: Theme.text-muted;
+                        stroke-width: 2px;
+
+                        MoveTo { x: 6; y: 3; }
+                        LineTo { x: 11; y: 8; }
+                        LineTo { x: 6; y: 13; }
+                    }
                 }
             }
         }

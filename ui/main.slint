@@ -27,10 +27,13 @@ component CheckRow inherits Rectangle {
 
     HorizontalLayout {
         spacing: 12px;
-        padding-left: 4px;
+        padding-left: 12px;
 
         Rectangle {
             width: 20px;
+            height: 20px;
+            vertical-stretch: 0;
+            y: 4px;
             border-radius: 6px;
             background: root.checked ? Theme.accent : transparent;
             border-width: 2px;
@@ -50,7 +53,7 @@ component CheckRow inherits Rectangle {
         Text {
             text: root.label;
             color: Theme.text-muted;
-            font-size: 14px;
+            font-size: 16px;
             vertical-alignment: center;
         }
     }
