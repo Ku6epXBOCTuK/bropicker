@@ -1,10 +1,10 @@
 $ErrorActionPreference = "Stop"
 
-cargo build
+cargo build --release
 if ($LASTEXITCODE -ne 0) { exit 1 }
 
 New-Item -ItemType Directory -Force -Path docs\img | Out-Null
-$exe = Join-Path $PWD "target\debug\bropicker.exe"
+$exe = Join-Path $PWD "target\release\bropicker.exe"
 
 $proc = Start-Process -FilePath $exe -WorkingDirectory $PWD -PassThru
 Start-Sleep -Milliseconds 1800

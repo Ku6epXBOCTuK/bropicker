@@ -1,0 +1,4 @@
+pre_bump_hooks = [
+    "powershell -ExecutionPolicy Bypass -File tools/screenshots-ci.ps1",
+    "git add docs/img",
+]
