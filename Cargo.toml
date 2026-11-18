@@ -3,19 +3,22 @@ name = "bropicker"
 version = "0.1.0"
 edition = "2024"
 license = "MIT"
-repository = "https://github.com/Ku6epXBOCTuK/brul"
+repository = "https://github.com/Ku6epXBOCTuK/bropicker"
 
-[lints]
-workspace = true
+[lints.clippy]
+non_ascii_literal = "deny"
 
 [dependencies]
-brul = { workspace = true }
-serde = { workspace = true, features = ["derive"] }
-thiserror = { workspace = true }
-toml = { workspace = true }
+brul = { path = "../brul" }
+serde = { version = "1.0.228", features = ["derive"] }
+thiserror = "2.0.21"
+toml = "1.1.4"
 
 [target.'cfg(windows)'.dependencies]
-winreg = { workspace = true }
+winreg = "0.56.0"
 
 [build-dependencies]
-brul = { workspace = true }
+brul = { path = "../brul" }
+
+[profile.dev]
+debug = "line-tables-only"

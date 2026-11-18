@@ -5,6 +5,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+$projectRoot = Split-Path -Parent $PSScriptRoot
 $classes = "HKCU:\Software\Classes\bropicker"
 $caps = "HKCU:\Software\bropicker-Capabilities"
 $regApps = "HKCU:\Software\RegisteredApplications"
@@ -20,15 +21,29 @@ if ($Uninstall) {
 }
 
 if (-not $Exe) {
-    $Exe = Join-Path $PSScriptRoot "..\..\..\target\release\bropicker.exe"
+    $targetDir = $null
+    if (Get-Command cargo -ErrorAction SilentlyContinue) {
+        Push-Location -LiteralPath $projectRoot
+        try {
+            $metadata = & cargo metadata --no-deps --format-version 1 2>$null | ConvertFrom-Json
+            $targetDir = $metadata.target_directory
+        } catch {
+        } finally {
+            Pop-Location
+        }
+    }
+    if (-not $targetDir) {
+        $targetDir = Join-Path $projectRoot "target"
+    }
+    $Exe = Join-Path $targetDir "release\bropicker.exe"
 }
 
 if (-not (Test-Path -LiteralPath $Exe)) {
-    Write-Error "bropicker.exe not found at $Exe. Build first: cargo build --release -p bropicker"
+    Write-Error "bropicker.exe not found at $Exe. Build first: cargo build --release"
     exit 1
 }
 
-$assets = Join-Path $PSScriptRoot "..\assets"
+$assets = Join-Path $projectRoot "assets"
 if (-not (Test-Path -LiteralPath $assets)) {
     Write-Error "bropicker assets not found at $assets"
     exit 1
